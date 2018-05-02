@@ -1,0 +1,6 @@
+[package]
+name = "simple_server"
+version = "0.1.0"
+authors = ["Karis Sponsler <karis.sponsler@apptreesoftware.com>"]
+
+[dependencies]
