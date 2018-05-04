@@ -13,7 +13,7 @@ pub struct Response {
     headers : Option<HashMap<String, String>>,
 }
 
-pub fn BadRoute<'a>() -> Response {
+pub fn bad_route<'a>() -> Response {
     let content_type = String::from("");
     let body = String::from("Unable to route request");
     return Response {status : 404,
@@ -22,9 +22,9 @@ pub fn BadRoute<'a>() -> Response {
                      headers : None};
 }
 
-fn get_route_map() -> HashMap<String, fn(Request) -> Response> {
+fn get_route_map() -> Box<HashMap<String, fn(Request) -> Response>> {
     let route_map : HashMap<String, fn(Request) -> Response> = HashMap::new();
-    return route_map;
+    return Box::new(route_map);
 }
 
 pub fn get_request_obj(request : &str) -> Request {
@@ -59,11 +59,19 @@ pub fn get_request_obj(request : &str) -> Request {
     return new_request;
 }
 
-pub fn route_request<'a>(request : &Request) -> Response {
-    return BadRoute();
+pub fn route_request<'a>(request : Request) -> Response {
+    let route_map = get_route_map();
+    let mut route_request: String = request.method.clone();
+    route_request.push(' ');
+    route_request.push_str(&request.route);
+    let route_function = route_map.get(&route_request);
+    match route_function {
+        Some(x) => x(request),
+        None => bad_route(),
+    }
 }
 
-pub fn stringify_response(response : &Response) -> String {
+pub fn stringify_response(response : Response) -> String {
     let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n", 
                                         response.status, 
                                         response.content_type));
@@ -80,5 +88,7 @@ pub fn stringify_response(response : &Response) -> String {
 }
 
 pub fn get_http_response(request_string: &String) -> String {
-    stringify_response(&route_request(&get_request_obj(request_string.as_str())))
+    let request_obj = get_request_obj(request_string);
+    let response = route_request(request_obj);
+    stringify_response(response)
 }

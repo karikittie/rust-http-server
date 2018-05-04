@@ -1,11 +1,10 @@
 use std::net::{TcpStream, TcpListener};
 use std::io::{Read, Write};
+use std::str;
 use std::thread;
 
 mod http_requests;
 use http_requests::get_http_response;
-
-const OUTPUT_BUFFER_SIZE: usize = 4096;
 
 fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
     let mut buffer = [0u8 ; 4096];
@@ -32,21 +31,17 @@ fn write_output_buffer(mut stream : TcpStream, to_write : &[u8]) {
 
 fn handle_request(stream : TcpStream) {
     let vector_buffer = read_input_buffer(&stream);
-    write_output_buffer(stream, b"HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n<html><body>Hello world</body></html>\r\n");
+    let request_str = 
+        String::from(match str::from_utf8(&vector_buffer) {
+            Ok(x) => x,
+            Err(err) => {
+                print!("Error: {}", err);
+                ""
+            },
+        });
+    let response_str = get_http_response(&request_str);
+    write_output_buffer(stream, response_str.as_bytes());
 }
-
-// fn partition_byte_vector(output_vector: &Vec<u8>) -> Vec<[u8 ; OUTPUT_BUFFER_SIZE]> {
-//     let parition_num: u32 = (output_vector.len() as f32 / OUTPUT_BUFFER_SIZE as f32).ceil() as u32;
-//     let resp_vec: Vec<[u8 ; OUTPUT_BUFFER_SIZE]> = vec![];
-//     for i in 0..parition_num {
-//         let mut arr: [u8 ; OUTPUT_BUFFER_SIZE];
-//         let start = i * OUTPUT_BUFFER_SIZE as u32;
-//         for j in 0..OUTPUT_BUFFER_SIZE as u32 {
-//             arr[j] = output_vector[(j + start) as usize];
-//         }
-//     }
-//     resp_vec
-// }
 
 fn main() {
     println!("Starting server...");
