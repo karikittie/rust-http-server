@@ -6,6 +6,14 @@ use std::thread;
 mod http_requests;
 use http_requests::get_http_response;
 
+/*
+Takes a TCP buffer, reads whatever is in it and outputs
+the contents to a u8 Vector. If there is an error reading
+the buffer, an error is printed to console and an empty
+vector is returned.
+TODO: we might want to return a Result<Vec<u8>> to push the error
+handling downstream.
+*/
 fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
     let mut buffer = [0u8 ; 4096];
     match stream.read(&mut buffer) {
@@ -22,6 +30,12 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
     }
 }
 
+/*
+Takes a u8 array and the TCP stream and writes those bytes to the stream.
+Prints 'replied' on successful write and an error message on failure.
+TODO: We also might want to push error handling out here. I'd like to use
+some actual logging here instead of printing to console.
+*/
 fn write_output_buffer(mut stream : TcpStream, to_write : &[u8]) {
     match stream.write(to_write) {
         Ok(_) => println!("Replied"),
@@ -29,6 +43,13 @@ fn write_output_buffer(mut stream : TcpStream, to_write : &[u8]) {
     }
 }
 
+/*
+Reads from the input buffer and transforms that Vec<u8> into a String.
+Then it transforms that String into a Request object and asks for the
+Response String from the http_requests file functions and writes that output
+to the stream.
+TODO: http_requests should be transformed into a module.
+*/
 fn handle_request(stream : TcpStream) {
     let vector_buffer = read_input_buffer(&stream);
     let request_str = 
@@ -43,6 +64,13 @@ fn handle_request(stream : TcpStream) {
     write_output_buffer(stream, response_str.as_bytes());
 }
 
+/*
+Starts the server on port 8000 listening to localhost.
+Then a stream is created and a new thread is spun up for every request.
+TODO: we need to add configs for the host and port it listens on.
+we should also think about limiting the number of threads that will
+be created to protect against DOS attacks.
+*/
 fn main() {
     println!("Starting server...");
     let listener = TcpListener::bind("127.0.0.1:8000").unwrap();

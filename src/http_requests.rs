@@ -12,7 +12,7 @@ pub struct Response {
     body : String,
     headers : Option<HashMap<String, String>>,
 }
-
+// Static route with 404 status, used as default bad request
 pub fn bad_route<'a>() -> Response {
     let content_type = String::from("");
     let body = String::from("Unable to route request");
@@ -22,11 +22,18 @@ pub fn bad_route<'a>() -> Response {
                      headers : None};
 }
 
+/*
+Gets the map of route Strings -> user-defined functions that take
+a Request object and return a Response object.
+*/
 fn get_route_map() -> Box<HashMap<String, fn(Request) -> Response>> {
     let route_map : HashMap<String, fn(Request) -> Response> = HashMap::new();
     return Box::new(route_map);
 }
 
+/*
+Takes the raw request string and transforms it into a Request object.
+*/
 pub fn get_request_obj(request : &str) -> Request {
     let request = request.trim_left();
     let lines = request.lines();
@@ -59,6 +66,12 @@ pub fn get_request_obj(request : &str) -> Request {
     return new_request;
 }
 
+/*
+Takes a Request object and routes it via the method + ' ' + route
+to the appropriate user-defined function.
+TODO: we need to add the ability to pass along URL arguments to the
+user-defined function.
+*/
 pub fn route_request<'a>(request : Request) -> Response {
     let route_map = get_route_map();
     let mut route_request: String = request.method.clone();
@@ -71,6 +84,10 @@ pub fn route_request<'a>(request : Request) -> Response {
     }
 }
 
+/*
+Takes a Response object and turns it into a single String that
+can be converted to a byte-stream and written back to the user.
+*/
 pub fn stringify_response(response : Response) -> String {
     let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n", 
                                         response.status, 
@@ -87,6 +104,11 @@ pub fn stringify_response(response : Response) -> String {
     res
 }
 
+/*
+Takes a raw request String and transforms it into a Request object,
+routes it to a user-defined function, transforms the return from that
+function into a String and gives that back.
+*/
 pub fn get_http_response(request_string: &String) -> String {
     let request_obj = get_request_obj(request_string);
     let response = route_request(request_obj);
