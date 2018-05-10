@@ -4,19 +4,36 @@
 These are files and/or directory that you must create in the root directory of the project to use the crate properly.
 
 ```
-.config | configuration file
 views.rs | contains views to route requests to
 templates/ | directory that contains html files
 ```
 
-## Config File
-The config file is named '.config' and is located in the root directory. Routes are handled by naming a method, route string and a view to route to. The view corresponds to a function in the 'views.rs' file that takes a Request object and returns a String body. There is an example of a config file below:
+## Configuring Views
+Views that serve HTTP routes are configured in the views.rs file. In this file, there is a view config function<br>
+`view_config() -> HashMap<String, CallBack>`<br>
+In this function, you will add routes in the following way:
+```
+fn view_config() -> HashMap<String, CallBack> {
+    let mut views = HashMap::new();
 
-[routes]<br>
-GET / home-view `# This is a default route`<br>
-GET /some-subpage subpage-view<br>
-POST /login login-view
+    views.insert("GET /".into(), my_func);
+    views.insert("POST /login".into(), my_login_func);
 
-[server]<br>
-host: 127.0.0.1 `# This is the default`<br>
-port: 8000 `# This is the default`
+    views
+}
+```
+
+## Configuring Server Options
+Server configuration options also have their own function. These options are in the server.rs file within the function:<br>
+`server_config() -> HashMap<String, String>`<br>
+However, you only need to edit the defaults that are already in place in this function like so:
+```
+fn server_config() -> HashMap<String, String> {
+    let mut server = HashMap::new();
+
+    server.insert("host".into(), "127.0.0.1".into());
+    server.insert("port".into(), "8000".into());
+
+    server
+}
+```
