@@ -1,3 +1,5 @@
+mod HTTP {
+
 use std::collections::HashMap;
 
 pub struct Request {
@@ -113,4 +115,5 @@ pub fn get_http_response(request_string: &String) -> String {
     let request_obj = get_request_obj(request_string);
     let response = route_request(request_obj);
     stringify_response(response)
+}
 }

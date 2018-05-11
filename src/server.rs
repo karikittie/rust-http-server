@@ -6,6 +6,8 @@ use std::thread;
 mod http_requests;
 use http_requests::get_http_response;
 
+mod servo;
+
 /*
 Takes a TCP buffer, reads whatever is in it and outputs
 the contents to a u8 Vector. If there is an error reading
@@ -73,8 +75,10 @@ be created to protect against DOS attacks.
 */
 fn main() {
     println!("Starting server...");
-    let listener = TcpListener::bind("127.0.0.1:8000").unwrap();
-    println!("Listening on port {}", "8000");
+    let host = String::from(servo::configs.server.host);
+    let port = String::from(servo::configs.server.port);
+    let listener = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
+    println!("Listening on {}:{}", host, port);
 
     for stream in listener.incoming() {
         match stream {
