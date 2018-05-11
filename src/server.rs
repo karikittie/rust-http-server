@@ -3,8 +3,8 @@ use std::io::{Read, Write};
 use std::str;
 use std::thread;
 
-mod http_requests;
-use http_requests::get_http_response;
+mod http;
+use http::get_http_response;
 
 mod servo;
 

@@ -1,22 +1,27 @@
-mod servo {
+mod http;
+mod views;
+
+pub mod servo {
     use std::collections::HashMap;
+    use http::http::{Request, Response};
+
     type CallBack = fn(Request) -> Response;
 
-    const HOST: String = "host".into();
-    const PORT: String = "port".into();
+    const HOST: &'static str = "host";
+    const PORT: &'static str = "port";
 
-    pub static configs: Configuration = Configuration::new();
+    pub static configs: Option<Configuration> = None;
 
-    struct Server {
+    pub struct Server {
         host: String,
         port: String,
     }
 
-    struct Routes {
+    pub struct Routes {
         route_map: HashMap<String, CallBack>,
     }
 
-    struct Configuration {
+    pub struct Configuration {
         server: Server,
         routes: Routes,
     }
@@ -24,17 +29,18 @@ mod servo {
     impl Configuration {
         fn new() -> Configuration {
             let server_configs = server_config();
-            let route_configs = route_config();         
+            let route_configs = route_config();
             let config = Configuration{
-                server: Server {host: server_configs[&HOST], port: server_configs[&PORT]},
+                server: Server {host: server_configs.get(HOST).expect("No host defined").clone(), 
+                                port: server_configs.get(PORT).expect("No port defined").clone()},
                 routes: Routes {route_map: route_configs}
             };
             config
         }
     }
 
-    fn server_config() -> HashMap<String, String> {
-        let mut config = HashMap::new();
+    fn server_config() -> HashMap<&'static str, String> {
+        let mut config: HashMap<&'static str, String> = HashMap::new();
 
         config.insert(HOST, "127.0.0.1".into());
         config.insert(PORT, "8000".into());
@@ -45,12 +51,6 @@ mod servo {
     fn route_config() -> HashMap<String, CallBack> {
         let mut config = HashMap::new();
 
-        config.insert("GET /".into(), default_home);
-
         config
-    }
-
-    fn default_home(request: Request) -> Response {
-        Response::new()
     }
 }
