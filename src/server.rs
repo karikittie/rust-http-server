@@ -2,10 +2,10 @@ use std::net::{TcpStream, TcpListener};
 use std::io::{Read, Write};
 use std::str;
 use std::thread;
+use http::http::get_http_response;
+use servo::servo::get_configs;
 
 mod http;
-use http::get_http_response;
-
 mod servo;
 
 /*
@@ -75,8 +75,9 @@ be created to protect against DOS attacks.
 */
 fn main() {
     println!("Starting server...");
-    let host = String::from(servo::configs.server.host);
-    let port = String::from(servo::configs.server.port);
+    let configs = get_configs();
+    let host = configs.server.host.clone();
+    let port = configs.server.port.clone();
     let listener = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
     println!("Listening on {}:{}", host, port);
 

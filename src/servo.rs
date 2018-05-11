@@ -1,6 +1,3 @@
-mod http;
-mod views;
-
 pub mod servo {
     use std::collections::HashMap;
     use http::http::{Request, Response};
@@ -10,20 +7,20 @@ pub mod servo {
     const HOST: &'static str = "host";
     const PORT: &'static str = "port";
 
-    pub static configs: Option<Configuration> = None;
+    static mut configs: Option<Configuration> = None;
 
     pub struct Server {
-        host: String,
-        port: String,
+        pub host: String,
+        pub port: String,
     }
 
     pub struct Routes {
-        route_map: HashMap<String, CallBack>,
+        pub route_map: HashMap<String, CallBack>,
     }
 
     pub struct Configuration {
-        server: Server,
-        routes: Routes,
+        pub server: Server,
+        pub routes: Routes,
     }
 
     impl Configuration {
@@ -36,6 +33,19 @@ pub mod servo {
                 routes: Routes {route_map: route_configs}
             };
             config
+        }
+    }
+
+    pub fn get_configs<'a>() -> &'a Configuration {
+        unsafe {
+            match &configs {
+                &Some(ref config) => &config,
+                &None => {
+                    let new_configs = Configuration::new();
+                    configs = Option::from(new_configs);
+                    get_configs()
+                },
+            }
         }
     }
 
