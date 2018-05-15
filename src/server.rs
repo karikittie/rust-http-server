@@ -76,8 +76,8 @@ be created to protect against DOS attacks.
 fn main() {
     println!("Starting server...");
     let configs = get_configs();
-    let host = configs.server.host.clone();
-    let port = configs.server.port.clone();
+    let host = configs.get_host();
+    let port = configs.get_port();
     let listener = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
     println!("Listening on {}:{}", host, port);
 
