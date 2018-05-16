@@ -174,3 +174,16 @@ fn route_config() -> &'static HashMap<String, CallBack> {
         }
     }
 }
+
+pub fn route_request(request: Request) -> Response {
+    let config = route_config();
+    let func = config.get(&request.get_route());
+    match func {
+        Some(f) => {
+            f(request)
+        },
+        None => {
+            http::bad_route()
+        },
+    }
+}

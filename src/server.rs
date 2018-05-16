@@ -2,7 +2,6 @@ use std::net::{TcpStream, TcpListener};
 use std::io::{Read, Write};
 use std::str;
 use std::thread;
-use servo::http::get_http_response;
 use servo::get_configs;
 
 mod servo;
@@ -18,8 +17,7 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
         Ok(_) => {
             let request = String::from_utf8_lossy(&buffer);
             println!("Handling request:\r\n{}", request);
-            let req = request.into_owned();
-            Vec::from(get_http_response(&req).as_bytes())
+            Vec::from(request.as_bytes())
         },
         Err(e) => {
             println!("Input Stream Error: {}", e);
@@ -53,7 +51,9 @@ fn handle_request(stream : TcpStream) {
                 ""
             },
         });
-    let response_str = get_http_response(&request_str);
+    let request_obj = servo::http::Request::from(&request_str);
+    let response = servo::route_request(request_obj);
+    let response_str = response.stringify();
     write_output_buffer(stream, response_str.as_bytes());
 }
 
@@ -67,6 +67,7 @@ fn main() {
     let configs = get_configs();
     let host = configs.get_host();
     let port = configs.get_port();
+    servo::add_route(String::from("GET /"), default_home);
     let listener = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
     println!("Listening on {}:{}", host, port);
 
@@ -80,4 +81,8 @@ fn main() {
             Err(e) => println!("Error in handling request: {}", e),
         }
     }
+}
+
+fn default_home(request: servo::http::Request) -> servo::http::Response {
+    servo::http::ok(String::from("good route"))
 }
