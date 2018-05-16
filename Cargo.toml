@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["Karis Sponsler <karis.sponsler@gmail.com>",
            "Ollie Murauskas <alm9@pdx.edu>"]
 
+[lib]
+name = "servo"
+path = "src/servo/mod.rs"
+
 [[bin]]
 name = "server"
 path = "src/server.rs"
