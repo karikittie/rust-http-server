@@ -83,6 +83,60 @@ impl Request {
         self.headers.insert(req_header.0, req_header.1);
         self
     }
+
+    /*
+    Takes the raw request string and transforms it into a Request object.
+    */
+    pub fn get_request_obj(mut self, request : &str) -> Request {
+        let request = request.trim_left();
+        let lines = request.lines();
+        let mut i = 0;
+        let mut found_method : String = String::default();
+        let mut found_route : String = String::default();
+        let mut found_headers : HashMap<String, String> = HashMap::new();
+        for line in lines {
+            if i == 0 {
+                let first_args : Vec<&str> = line.split_whitespace().collect();
+                found_method = first_args[0].to_string();
+                found_route = first_args[1].to_string();
+                if found_route.ends_with("/") {
+                    found_route.trim_right_matches("/");
+                }
+            }
+            else {
+                let pair : Vec<&str> = line.split(":").collect();
+                if pair.len() > 1 {
+                    let key = pair[0];
+                    let value = pair[1].trim_left();
+                    found_headers.insert(key.to_string(), value.to_string());
+                }
+            }
+            i += 1;
+        }
+
+            self.method = found_method;
+            self.route = found_route;
+            self.headers = found_headers;
+            self
+    }
+
+    /*
+    Takes a Request object and routes it via the method + ' ' + route
+    to the appropriate user-defined function.
+    TODO: we need to add the ability to pass along URL arguments to the
+    user-defined function.
+    */
+    pub fn route_request<'a>(self) -> Response {
+        let route_map = get_route_map();
+        let mut route_request: String = self.method.clone();
+        route_request.push(' ');
+        route_request.push_str(&self.route.clone());
+        let route_function = route_map.get(&route_request);
+        match route_function {
+            Some(x) => x(self),
+            None => bad_route(),
+        }
+    }
 }
 
 
@@ -152,6 +206,25 @@ impl Response {
             self
     }
 
+    /*
+    Takes a Response object and turns it into a single String that
+    can be converted to a byte-stream and written back to the user.
+    */
+    pub fn stringify_response(&self) -> String {
+        let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n",
+                                            self.get_status(),
+                                            self.get_content_type()));
+        if self.headers.is_some() {
+            let headers = self.get_headers().unwrap();
+            for key in headers.keys() {
+                res = res + &format!("{}: {}", key, headers[key]);
+            }
+        }
+        res = res + "\r\n";
+        res = res + &format!("{}", self.get_body());
+        res = res + "\r\n\r\n";
+        res
+    }
 }
 
 // Static route with 404 status, used as default bad request
@@ -173,85 +246,12 @@ fn get_route_map() -> Box<HashMap<String, fn(Request) -> Response>> {
 }
 
 /*
-Takes the raw request string and transforms it into a Request object.
-*/
-pub fn get_request_obj(request : &str) -> Request {
-    let request = request.trim_left();
-    let lines = request.lines();
-    let mut i = 0;
-    let mut found_method : String = String::default();
-    let mut found_route : String = String::default();
-    let mut found_headers : HashMap<String, String> = HashMap::new();
-    for line in lines {
-        if i == 0 {
-            let first_args : Vec<&str> = line.split_whitespace().collect();
-            found_method = first_args[0].to_string();
-            found_route = first_args[1].to_string();
-            if found_route.ends_with("/") {
-                found_route.trim_right_matches("/");
-            }
-        }
-        else {
-            let pair : Vec<&str> = line.split(":").collect();
-            if pair.len() > 1 {
-                let key = pair[0];
-                let value = pair[1].trim_left();
-                found_headers.insert(key.to_string(), value.to_string());
-            }
-        }
-        i += 1;
-    }
-    let new_request = Request::new().with_method(found_method)
-                                    .with_route(found_route)
-                                    .with_headers(found_headers);
-    new_request
-}
-
-/*
-Takes a Request object and routes it via the method + ' ' + route
-to the appropriate user-defined function.
-TODO: we need to add the ability to pass along URL arguments to the
-user-defined function.
-*/
-pub fn route_request<'a>(request : Request) -> Response {
-    let route_map = get_route_map();
-    let mut route_request: String = request.get_method();
-    route_request.push(' ');
-    route_request.push_str(&request.get_route());
-    let route_function = route_map.get(&route_request);
-    match route_function {
-        Some(x) => x(request),
-        None => bad_route(),
-    }
-}
-
-/*
-Takes a Response object and turns it into a single String that
-can be converted to a byte-stream and written back to the user.
-*/
-pub fn stringify_response(response : Response) -> String {
-    let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n",
-                                        response.status,
-                                        response.content_type));
-    if response.headers.is_some() {
-        let headers = response.headers.as_ref().unwrap();
-        for key in headers.keys() {
-            res = res + &format!("{}: {}", key, headers[key]);
-        }
-    }
-    res = res + "\r\n";
-    res = res + &format!("{}", response.body);
-    res = res + "\r\n\r\n";
-    res
-}
-
-/*
 Takes a raw request String and transforms it into a Request object,
 routes it to a user-defined function, transforms the return from that
 function into a String and gives that back.
 */
 pub fn get_http_response(request_string: &String) -> String {
-    let request_obj = get_request_obj(request_string);
-    let response = route_request(request_obj);
-    stringify_response(response)
+    let request_obj = Request::new().get_request_obj(request_string);
+    let response = request_obj.route_request();
+    response.stringify_response()
 }
