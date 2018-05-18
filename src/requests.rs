@@ -41,15 +41,15 @@ impl Request {
 
     // Creates a new request object with default values
     pub fn new() -> Request {
-	let empty_header = HashMap::new();
+	    let empty_header = HashMap::new();
         let request = Request { method: "".to_string(),
-				route: "".to_string(),
-				headers: empty_header
-	};
-	request
+	                            route: "".to_string(),
+		                        headers: empty_header
+	    };
+	    request
     }
 
-// Request getters
+    // Request getters
     pub fn get_method(&self) -> String {
         self.method.clone()
     }
@@ -62,7 +62,7 @@ impl Request {
         self.headers.clone()
     }
 
-// Request setters
+    // Request setters
     pub fn with_method(mut self, req_method: String) -> Request {
         self.method = req_method;
         self
@@ -73,7 +73,7 @@ impl Request {
         self
     }
 
-    // Destroys current headers and replaces them with the arg
+    // Arg copied over as new header hashmap
     pub fn with_headers(mut self, req_headers: HashMap<String, String>) -> Request {
         self.headers = req_headers;
         self
@@ -88,17 +88,18 @@ impl Request {
 
 
 impl Response {
-// Create a new response struct with default values
+
+    // Create a new response struct with default values
     pub fn new() -> Response {
         let response = Response { status: 0_i32,
-				  content_type: "".to_string(),
-				  body: "".to_string(),
-				  headers: None
-	};
-	response
+				                  content_type: "".to_string(),
+				                  body: "".to_string(),
+				                  headers: None
+	    };
+	    response
     }
 
-// Response getters
+    // Response getters
     pub fn get_status(&self) -> i32 {
         self.status
     }
@@ -115,7 +116,7 @@ impl Response {
         self.headers.clone()
     }
 
-// Response setters
+    // Response setters
     pub fn with_status(mut self, res_status: i32) -> Response {
         self.status = res_status;
         self
@@ -131,7 +132,7 @@ impl Response {
         self
     }
 
-    // This will destroy all current headers and update with the arg
+    // Sets headers to arg
     pub fn with_headers(mut self, res_headers: Option<HashMap<String, String>>) -> Response {
         self.headers = res_headers;
         self
@@ -139,17 +140,17 @@ impl Response {
 
     // Adds to the current header hashmap or creates a new one if necessary
     pub fn with_header(mut self, res_header: (String, String)) -> Response {
-	match self.headers {
-            Some(ref mut headers) => {
-                headers.insert(res_header.0, res_header.1);
-            },
-            None => {
-		let mut headers = HashMap::new();
-		headers.insert(res_header.0, res_header.1);
-		self.headers = Option::from(headers);
+	        match self.headers {
+                Some(ref mut headers) => {
+                    headers.insert(res_header.0, res_header.1);
+                },
+                None => {
+		            let mut headers = HashMap::new();
+		            headers.insert(res_header.0, res_header.1);
+		            self.headers = Option::from(headers);
+                }
             }
-        }
-        self
+            self
     }
 
 }
