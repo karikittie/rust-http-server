@@ -17,7 +17,7 @@ pub struct Response {
     pub headers : Option<HashMap<String, String>>,
 }
 
-
+// Allows for equality comparisons between requests/responses
 impl PartialEq for Request {
     fn eq(&self, other: &Request) -> bool {
         self.method == other.method
@@ -36,9 +36,33 @@ impl PartialEq for Response {
 }
 
 
-// Methods available for Request and Response objects. Uses builder pattern for ease of access.
+// Methods available for Request and Response objects. Uses builder pattern.
 impl Request {
 
+    // Creates a new request object with default values
+    pub fn new() -> Request {
+	let empty_header = HashMap::new();
+        let request = Request { method: "".to_string(),
+				route: "".to_string(),
+				headers: empty_header
+	};
+	request
+    }
+
+// Request getters
+    pub fn get_method(&self) -> String {
+        self.method.clone()
+    }
+
+    pub fn get_route(&self) -> String {
+        self.method.clone()
+    }
+
+    pub fn get_headers(&self) -> HashMap<String, String> {
+        self.headers.clone()
+    }
+
+// Request setters
     pub fn with_method(mut self, req_method: String) -> Request {
         self.method = req_method;
         self
@@ -49,16 +73,49 @@ impl Request {
         self
     }
 
+    // Destroys current headers and replaces them with the arg
     pub fn with_headers(mut self, req_headers: HashMap<String, String>) -> Request {
         self.headers = req_headers;
         self
     }
 
+    // Adds to existing hash map
+    pub fn with_header(mut self, req_header: (String, String)) -> Request {
+        self.headers.insert(req_header.0, req_header.1);
+        self
+    }
 }
 
 
 impl Response {
+// Create a new response struct with default values
+    pub fn new() -> Response {
+        let response = Response { status: 0_i32,
+				  content_type: "".to_string(),
+				  body: "".to_string(),
+				  headers: None
+	};
+	response
+    }
 
+// Response getters
+    pub fn get_status(&self) -> i32 {
+        self.status
+    }
+
+    pub fn get_content_type(&self) -> String {
+        self.content_type.clone()
+    }
+
+    pub fn get_body(&self) -> String {
+        self.body.clone()
+    }
+
+    pub fn get_headers(&self) -> Option<HashMap<String, String>> {
+        self.headers.clone()
+    }
+
+// Response setters
     pub fn with_status(mut self, res_status: i32) -> Response {
         self.status = res_status;
         self
@@ -74,8 +131,24 @@ impl Response {
         self
     }
 
+    // This will destroy all current headers and update with the arg
     pub fn with_headers(mut self, res_headers: Option<HashMap<String, String>>) -> Response {
         self.headers = res_headers;
+        self
+    }
+
+    // Adds to the current header hashmap or creates a new one if necessary
+    pub fn with_header(mut self, res_header: (String, String)) -> Response {
+	match self.headers {
+            Some(ref mut headers) => {
+                headers.insert(res_header.0, res_header.1);
+            },
+            None => {
+		let mut headers = HashMap::new();
+		headers.insert(res_header.0, res_header.1);
+		self.headers = Option::from(headers);
+            }
+        }
         self
     }
 
