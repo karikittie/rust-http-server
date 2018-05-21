@@ -48,42 +48,6 @@ impl Request {
 	    request
     }
 
-    // Request getters
-    pub fn get_method(&self) -> String {
-        self.method.clone()
-    }
-
-    pub fn get_route(&self) -> String {
-        self.method.clone()
-    }
-
-    pub fn get_headers(&self) -> HashMap<String, String> {
-        self.headers.clone()
-    }
-
-    // Request setters
-    pub fn with_method(mut self, req_method: String) -> Request {
-        self.method = req_method;
-        self
-    }
-
-    pub fn with_route(mut self, res_route: String) -> Request {
-        self.route = res_route;
-        self
-    }
-
-    // Arg copied over as new header hashmap
-    pub fn with_headers(mut self, req_headers: HashMap<String, String>) -> Request {
-        self.headers = req_headers;
-        self
-    }
-
-    // Adds to existing hash map
-    pub fn with_header(mut self, req_header: (String, String)) -> Request {
-        self.headers.insert(req_header.0, req_header.1);
-        self
-    }
-
     /*
     Takes the raw request string and transforms it into a Request object.
     */
@@ -118,6 +82,42 @@ impl Request {
             self.route = found_route;
             self.headers = found_headers;
             self
+    }
+
+    // Request getters
+    pub fn get_method(&self) -> String {
+        self.method.clone()
+    }
+
+    pub fn get_route(&self) -> String {
+        self.method.clone()
+    }
+
+    pub fn get_headers(&self) -> HashMap<String, String> {
+        self.headers.clone()
+    }
+
+    // Request setters
+    pub fn with_method(mut self, req_method: String) -> Request {
+        self.method = req_method;
+        self
+    }
+
+    pub fn with_route(mut self, res_route: String) -> Request {
+        self.route = res_route;
+        self
+    }
+
+    // Arg copied over as new header hashmap
+    pub fn with_headers(mut self, req_headers: HashMap<String, String>) -> Request {
+        self.headers = req_headers;
+        self
+    }
+
+    // Adds to existing hash map
+    pub fn with_header(mut self, req_header: (String, String)) -> Request {
+        self.headers.insert(req_header.0, req_header.1);
+        self
     }
 
     /*
@@ -212,8 +212,8 @@ impl Response {
     */
     pub fn stringify_response(&self) -> String {
         let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n",
-                                            self.get_status(),
-                                            self.get_content_type()));
+                                            self.status,
+                                            self.content_type));
         if self.headers.is_some() {
             let headers = self.get_headers().unwrap();
             for key in headers.keys() {
@@ -240,7 +240,7 @@ pub fn bad_route<'a>() -> Response {
 Gets the map of route Strings -> user-defined functions that take
 a Request object and return a Response object.
 */
-fn get_route_map() -> Box<HashMap<String, fn(Request) -> Response>> {
+pub fn get_route_map() -> Box<HashMap<String, fn(Request) -> Response>> {
     let route_map : HashMap<String, fn(Request) -> Response> = HashMap::new();
     return Box::new(route_map);
 }

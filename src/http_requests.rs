@@ -40,7 +40,7 @@ pub fn get_request_obj(request : &str) -> Request {
     let mut i = 0;
     let mut found_method : String = String::default();
     let mut found_route : String = String::default();
-    let mut found_headers : HashMap<String, String> = HashMap::new();
+    let mut found_headers : HashMap<String, String> = HashMap::new();    
     for line in lines {
         if i == 0 {
             let first_args : Vec<&str> = line.split_whitespace().collect();
@@ -60,7 +60,7 @@ pub fn get_request_obj(request : &str) -> Request {
         }
         i += 1;
     }
-    let new_request = Request {method : found_method,
+    let new_request = Request {method : found_method, 
                                route : found_route,
                                headers : found_headers};
     return new_request;
@@ -89,8 +89,8 @@ Takes a Response object and turns it into a single String that
 can be converted to a byte-stream and written back to the user.
 */
 pub fn stringify_response(response : Response) -> String {
-    let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n",
-                                        response.status,
+    let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n", 
+                                        response.status, 
                                         response.content_type));
     if response.headers.is_some() {
         let headers = response.headers.as_ref().unwrap();
