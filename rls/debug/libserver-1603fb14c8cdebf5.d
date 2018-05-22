@@ -1,1 +1,0 @@
-/Users/karis/Programs/RustPrograms/simple_server/rls/debug/libserver-1603fb14c8cdebf5.rmeta: /Users/karis/Programs/RustPrograms/simple_server/src/server.rs /Users/karis/Programs/RustPrograms/simple_server/src/servo/http.rs /Users/karis/Programs/RustPrograms/simple_server/src/servo/mod.rs
