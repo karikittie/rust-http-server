@@ -1,8 +1,9 @@
 pub mod http;
 
-use self::http::{Request, Response};
+use self::http::{Request, Response, CONTENT_TYPE};
 use std::collections::HashMap;
 use std::fs::File;
+use std::io::Read;
 use std::io::prelude::open;
 
 pub type CallBack = fn(Request) -> Response;
@@ -210,12 +211,20 @@ fn static_route(request: Request) -> Response {
     let filename = format!("{}{}", static_dir, file_to_get);
     let file_to_serve = File::open(filename);
     match file_to_serve {
-        Ok(x) => {
-            http::ok(String::from("")) // TODO: serve file
+        Ok(file) => {
+            let mut contents = String::new();
+            let file_read = file.read_to_string(&mut contents);
+            match file_read {
+                Ok(result) => http::ok(contents, CONTENT_TYPE::MULTIPART_FORM),
+                Err(e) => {
+                    print!("Error reading file: {}", e);
+                    http::not_found(String::from(format!("Could not find file {}", filename)), CONTENT_TYPE::TEXT_HTML)
+                },
+            }
         },
         Err(e) => {
             println!("Could not find file to serve: {:?}",e);
-            http::not_found(String::from("Could not find resource"))
+            http::not_found(String::from("Could not find resource"), CONTENT_TYPE::TEXT_HTML)
         },
     }
 }

@@ -8,9 +8,23 @@ pub struct Request {
 
 pub struct Response {
     status : i32,
-    content_type : String,
+    content_type : CONTENT_TYPE,
     body : String,
     headers : Option<HashMap<String, String>>,
+}
+
+pub enum CONTENT_TYPE {
+    TEXT_HTML,
+    MULTIPART_FORM,
+}
+
+impl CONTENT_TYPE {
+    pub fn stringify(&self) -> String {
+        match self {
+            CONTENT_TYPE::TEXT_HTML => String::from("text/html"),
+            CONTENT_TYPE::MULTIPART_FORM => String::from("multipart/form"),
+        }
+    }
 }
 
 impl Request {
@@ -24,29 +38,16 @@ impl Request {
 }
 
 // Static route with 404 status, used as default bad request
-pub fn bad_route<'a>() -> Response {
-    let content_type = String::from("text/html");
-    let body = String::from("Unable to route request");
+pub fn not_found<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     return Response {status : 404,
                     content_type : content_type,
                     body : body,
                     headers : None};
 }
 
-pub fn ok<'a>(body: String) -> Response {
-    let content_type = String::from("text/html");
+pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     Response {
         status : 200,
-        content_type : content_type,
-        body : body,
-        headers : None
-    }
-}
-
-pub fn not_found<'a>(body: String) -> Response {
-    let content_type = String::from("text/html");
-    Response {
-        status: 404,
         content_type : content_type,
         body : body,
         headers : None
