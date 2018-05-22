@@ -211,13 +211,13 @@ fn static_route(request: Request) -> Response {
     let file_to_serve = File::open(filename);
     match file_to_serve {
         Ok(x) => {
-
+            http::ok(String::from("")) // TODO: serve file
         },
         Err(e) => {
             println!("Could not find file to serve: {:?}",e);
+            http::not_found(String::from("Could not find resource"))
         },
     }
-    http::ok(String::from("stuff")) // TODO: implement this!
 }
 
 pub fn route_request(request: Request) -> Response {

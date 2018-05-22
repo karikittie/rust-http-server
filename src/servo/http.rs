@@ -35,11 +35,22 @@ pub fn bad_route<'a>() -> Response {
 
 pub fn ok<'a>(body: String) -> Response {
     let content_type = String::from("text/html");
-    let body = body;
-    return Response {status : 200,
-                    content_type : content_type,
-                    body : body,
-                    headers : None};
+    Response {
+        status : 200,
+        content_type : content_type,
+        body : body,
+        headers : None
+    }
+}
+
+pub fn not_found<'a>(body: String) -> Response {
+    let content_type = String::from("text/html");
+    Response {
+        status: 404,
+        content_type : content_type,
+        body : body,
+        headers : None
+    }
 }
 
 /*
