@@ -16,7 +16,6 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
     match stream.read(&mut buffer) {
         Ok(_) => {
             let request = String::from_utf8_lossy(&buffer);
-            println!("Handling request:\r\n{}", request);
             Vec::from(request.as_bytes())
         },
         Err(e) => {
@@ -31,7 +30,7 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
 /// Prints 'replied' on successful write and an error message on failure.
 fn write_output_buffer(mut stream : TcpStream, to_write : &[u8]) {
     match stream.write(to_write) {
-        Ok(_) => println!("Replied"),
+        Ok(_) => (),
         Err(e) => println!("Failed to reply to request: {}", e),
     }
 }
@@ -84,5 +83,5 @@ fn main() {
 }
 
 fn default_home(request: servo::http::Request) -> servo::http::Response {
-    servo::http::ok(String::from("good route"), servo::http::content_type::CONTENT_TYPE::TEXT_HTML)
+    servo::http::ok(String::from("Good Job."), servo::http::content_type::CONTENT_TYPE::TEXT_HTML)
 }
