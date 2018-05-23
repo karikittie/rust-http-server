@@ -4,7 +4,6 @@ use self::http::{Request, Response, CONTENT_TYPE};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use std::io::prelude::open;
 
 pub type CallBack = fn(Request) -> Response;
 
@@ -190,8 +189,8 @@ fn route_config() -> &'static HashMap<String, CallBack> {
                 conf
             },
             &mut None => {
-                let conf: HashMap<String, CallBack> = HashMap::new();
-                //conf.insert(String::from("GET /"), default_home); TODO: add this view
+                let mut conf: HashMap<String, CallBack> = HashMap::new();
+                conf.insert(String::from("GET /static/{}"), static_route);
                 ROUTE_CONFIGS = Option::from(conf);
                 route_config()
             },
@@ -205,13 +204,13 @@ fn route_config() -> &'static HashMap<String, CallBack> {
 fn static_route(request: Request) -> Response {
     let config = server_config();
     let static_dir = config.get(STATIC_DIR).expect("Static directory not configured properly");
-    let file_to_get = String::from(format!("../{}/", static_dir));
+    let mut file_to_get = String::from(format!("../{}/", static_dir));
     let static_url_len = "/static/".len();
     file_to_get.push_str(&request.get_route().chars().skip(static_url_len).collect::<String>());
     let filename = format!("{}{}", static_dir, file_to_get);
-    let file_to_serve = File::open(filename);
+    let file_to_serve = File::open(&filename);
     match file_to_serve {
-        Ok(file) => {
+        Ok(mut file) => {
             let mut contents = String::new();
             let file_read = file.read_to_string(&mut contents);
             match file_read {
@@ -237,7 +236,7 @@ pub fn route_request(request: Request) -> Response {
             f(request)
         },
         None => {
-            http::bad_route()
+            http::not_found(String::from(""), CONTENT_TYPE::TEXT_HTML)
         },
     }
 }

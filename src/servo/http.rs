@@ -54,6 +54,15 @@ pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     }
 }
 
+pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
+    Response {
+        status : 505,
+        content_type : content_type,
+        body : body,
+        headers : None
+    }
+}
+
 /*
 Gets the map of route Strings -> user-defined functions that take
 a Request object and return a Response object.
@@ -114,7 +123,7 @@ pub fn route_request<'a>(request : Request) -> Response {
     let route_function = route_map.get(&route_request);
     match route_function {
         Some(x) => x(request),
-        None => bad_route(),
+        None => server_error(String::from("Unable to route request"), CONTENT_TYPE::TEXT_HTML),
     }
 }
 
@@ -126,7 +135,7 @@ impl Response {
     pub fn stringify(self) -> String {
         let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n", 
                                             self.status, 
-                                            self.content_type));
+                                            self.content_type.stringify()));
         if self.headers.is_some() {
             let headers = self.headers.as_ref().unwrap();
             for key in headers.keys() {
