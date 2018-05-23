@@ -52,9 +52,9 @@ fn handle_request(stream : TcpStream) {
             },
         });
     let request_obj = servo::http::Request::from(&request_str);
-    let response = servo::route_request(request_obj);
-    let response_str = response.stringify();
-    write_output_buffer(stream, response_str.as_bytes());
+    let mut response = servo::route_request(request_obj);
+    let response_bytes = response.byteify();
+    write_output_buffer(stream, response_bytes.as_slice());
 }
 
 // TODO: we need to add configs for the host and port it listens on.
@@ -84,5 +84,5 @@ fn main() {
 }
 
 fn default_home(request: servo::http::Request) -> servo::http::Response {
-    servo::http::ok(String::from("good route"))
+    servo::http::ok(String::from("good route"), servo::http::content_type::CONTENT_TYPE::TEXT_HTML)
 }

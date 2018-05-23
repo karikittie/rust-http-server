@@ -1,6 +1,7 @@
 pub mod http;
 
-use self::http::{Request, Response, CONTENT_TYPE};
+use self::http::{Request, Response};
+use self::http::content_type::{CONTENT_TYPE, get_content_type};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
@@ -157,6 +158,7 @@ fn server_config() -> HashMap<&'static str, String> {
                 let mut config: HashMap<&'static str, String> = HashMap::new();
                 config.insert(HOST, String::from("127.0.0.1"));
                 config.insert(PORT, String::from("8000"));
+                config.insert(STATIC_DIR, String::from("static/"));
                 SERVER_CONFIGS = Option::from(config);
             },
         }
@@ -190,7 +192,7 @@ fn route_config() -> &'static HashMap<String, CallBack> {
             },
             &mut None => {
                 let mut conf: HashMap<String, CallBack> = HashMap::new();
-                conf.insert(String::from("GET /static/{}"), static_route);
+                conf.insert(String::from("GET /static/"), static_route);
                 ROUTE_CONFIGS = Option::from(conf);
                 route_config()
             },
@@ -204,20 +206,18 @@ fn route_config() -> &'static HashMap<String, CallBack> {
 fn static_route(request: Request) -> Response {
     let config = server_config();
     let static_dir = config.get(STATIC_DIR).expect("Static directory not configured properly");
-    let mut file_to_get = String::from(format!("../{}/", static_dir));
-    let static_url_len = "/static/".len();
-    file_to_get.push_str(&request.get_route().chars().skip(static_url_len).collect::<String>());
+    let mut file_to_get = String::from("file.png");
     let filename = format!("{}{}", static_dir, file_to_get);
     let file_to_serve = File::open(&filename);
     match file_to_serve {
         Ok(mut file) => {
-            let mut contents = String::new();
-            let file_read = file.read_to_string(&mut contents);
-            match file_read {
-                Ok(result) => http::ok(contents, CONTENT_TYPE::MULTIPART_FORM),
+            let mut contents: Vec<u8> = Vec::new();
+            let result = file.read_to_end(&mut contents);
+            match result {
+                Ok(_) => http::ok_file(contents, get_content_type(&filename)),
                 Err(e) => {
-                    print!("Error reading file: {}", e);
-                    http::not_found(String::from(format!("Could not find file {}", filename)), CONTENT_TYPE::TEXT_HTML)
+                    print!("File read error: {}", e);
+                    http::not_found(String::from("Could not read file"), CONTENT_TYPE::TEXT_HTML)
                 },
             }
         },
