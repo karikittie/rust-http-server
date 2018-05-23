@@ -206,7 +206,7 @@ fn route_config() -> &'static HashMap<String, CallBack> {
 fn static_route(request: Request) -> Response {
     let config = server_config();
     let static_dir = config.get(STATIC_DIR).expect("Static directory not configured properly");
-    let mut file_to_get = String::from("file.png");
+    let mut file_to_get = String::from("main.css");
     let filename = format!("{}{}", static_dir, file_to_get);
     let file_to_serve = File::open(&filename);
     match file_to_serve {

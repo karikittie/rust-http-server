@@ -54,7 +54,7 @@ fn handle_request(stream : TcpStream) {
     let request_obj = servo::http::Request::from(&request_str);
     let mut response = servo::route_request(request_obj);
     let response_bytes = response.byteify();
-    write_output_buffer(stream, response_bytes.as_slice());
+    write_output_buffer(stream, &response_bytes);
 }
 
 // TODO: we need to add configs for the host and port it listens on.
