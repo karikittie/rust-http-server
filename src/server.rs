@@ -16,7 +16,6 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
     match stream.read(&mut buffer) {
         Ok(_) => {
             let request = String::from_utf8_lossy(&buffer);
-            println!("Handling request:\r\n{}", request);
             Vec::from(request.as_bytes())
         },
         Err(e) => {
@@ -31,7 +30,7 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
 /// Prints 'replied' on successful write and an error message on failure.
 fn write_output_buffer(mut stream : TcpStream, to_write : &[u8]) {
     match stream.write(to_write) {
-        Ok(_) => println!("Replied"),
+        Ok(_) => (),
         Err(e) => println!("Failed to reply to request: {}", e),
     }
 }
@@ -52,9 +51,9 @@ fn handle_request(stream : TcpStream) {
             },
         });
     let request_obj = servo::http::Request::from(&request_str);
-    let response = servo::route_request(request_obj);
-    let response_str = response.stringify();
-    write_output_buffer(stream, response_str.as_bytes());
+    let mut response = servo::route_request(request_obj);
+    let response_bytes = response.byteify();
+    write_output_buffer(stream, &response_bytes);
 }
 
 // TODO: we need to add configs for the host and port it listens on.
@@ -84,5 +83,5 @@ fn main() {
 }
 
 fn default_home(request: servo::http::Request) -> servo::http::Response {
-    servo::http::ok(String::from("good route"))
+    servo::http::ok(String::from("Good Job."), servo::http::content_type::CONTENT_TYPE::TEXT_HTML)
 }

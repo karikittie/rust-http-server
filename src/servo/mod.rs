@@ -1,13 +1,17 @@
 pub mod http;
 
 use self::http::{Request, Response};
+use self::http::content_type::{CONTENT_TYPE, get_content_type};
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::Read;
 
 pub type CallBack = fn(Request) -> Response;
 
 // Public constants
 pub const HOST: &'static str = "host";
 pub const PORT: &'static str = "port";
+pub const STATIC_DIR: &'static str = "sdir";
 
 // Static vars are to avoid having to do dependency injection to have
 // configuration persistence.
@@ -19,6 +23,7 @@ static mut ROUTE_CONFIGS: Option<HashMap<String, CallBack>> = None;
 pub struct Server {
     host: String,
     port: String,
+    static_dir: String,
 }
 
 // Route to function mappings
@@ -42,8 +47,19 @@ impl Configuration {
         let server_conf = server_config();
         let route_conf = route_config();
         let config = Configuration{
-            server: Server {host: server_conf.get(HOST).expect("No host defined").clone(), 
-                            port: server_conf.get(PORT).expect("No port defined").clone()},
+            server: Server {host: server_conf
+                                    .get(HOST)
+                                    .expect("No host defined")
+                                    .clone(), 
+                            port: server_conf
+                                    .get(PORT)
+                                    .expect("No port defined")
+                                    .clone(),
+                            static_dir: server_conf
+                                    .get(STATIC_DIR)
+                                    .expect("No static directory defined")
+                                    .clone()
+                            },
             routes: Routes {route_map: route_conf}
         };
         config
@@ -75,13 +91,18 @@ pub fn add_route(route_string: String, callback: CallBack) {
 }
 
 // Allows the user to set the host the server will listen on
-pub fn set_host(host: String) {
-    set_server_attr(HOST, host);
+pub fn set_host(host: &str) {
+    set_server_attr(HOST, String::from(host));
 }
 
 // Allows the user to set the port the server will listen on
-pub fn set_port(port: String) {
-    set_server_attr(PORT, port);
+pub fn set_port(port: &str) {
+    set_server_attr(PORT, String::from(port));
+}
+
+// Allows the user to set the static file directory the server will look in
+pub fn set_static_directory(dir: &str) {
+    set_server_attr(STATIC_DIR, String::from(dir));
 }
 
 /*
@@ -129,11 +150,15 @@ fn server_config() -> HashMap<&'static str, String> {
                 if !conf.contains_key(PORT) {
                     conf.insert(PORT, String::from("8000"));
                 }
+                if !conf.contains_key(STATIC_DIR) {
+                    conf.insert(STATIC_DIR, String::from("./static/"));
+                }
             },
             &mut None => {
                 let mut config: HashMap<&'static str, String> = HashMap::new();
                 config.insert(HOST, String::from("127.0.0.1"));
                 config.insert(PORT, String::from("8000"));
+                config.insert(STATIC_DIR, String::from("static/"));
                 SERVER_CONFIGS = Option::from(config);
             },
         }
@@ -166,12 +191,40 @@ fn route_config() -> &'static HashMap<String, CallBack> {
                 conf
             },
             &mut None => {
-                let conf: HashMap<String, CallBack> = HashMap::new();
-                //conf.insert(String::from("GET /"), default_home); TODO: add this view
+                let mut conf: HashMap<String, CallBack> = HashMap::new();
+                conf.insert(String::from("GET /static/"), static_route);
                 ROUTE_CONFIGS = Option::from(conf);
                 route_config()
             },
         }
+    }
+}
+
+/// This function serves static files based on the defined static directory.
+/// The default static files directory is `static/`. Static files are served at
+/// `/static/{file path under static directory}`
+fn static_route(request: Request) -> Response {
+    let config = server_config();
+    let static_dir = config.get(STATIC_DIR).expect("Static directory not configured properly");
+    let mut file_to_get = String::from("main.css");
+    let filename = format!("{}{}", static_dir, file_to_get);
+    let file_to_serve = File::open(&filename);
+    match file_to_serve {
+        Ok(mut file) => {
+            let mut contents: Vec<u8> = Vec::new();
+            let result = file.read_to_end(&mut contents);
+            match result {
+                Ok(_) => http::ok_file(contents, get_content_type(&filename)),
+                Err(e) => {
+                    print!("File read error: {}", e);
+                    http::not_found(String::from("Could not read file"), CONTENT_TYPE::TEXT_HTML)
+                },
+            }
+        },
+        Err(e) => {
+            println!("Could not find file to serve: {:?}",e);
+            http::not_found(String::from("Could not find resource"), CONTENT_TYPE::TEXT_HTML)
+        },
     }
 }
 
@@ -183,7 +236,7 @@ pub fn route_request(request: Request) -> Response {
             f(request)
         },
         None => {
-            http::bad_route()
+            http::not_found(String::from(""), CONTENT_TYPE::TEXT_HTML)
         },
     }
 }

@@ -13,6 +13,13 @@ Views are configured using the method<br>
 `servo::add_route(String, CallBack)`<br>
 where:<br>
 `type CallBack = fn(Request) -> Response`<br>
+Views take a servo::http::Request and return a servo::http::Response. There are several helper methods for this:
+```
+servo::http::ok(body: String, content_type: servo::http::content_type::CONTENT_TYPE) // Status = 200
+servo::http::ok_file(body: Vec<u8>, content_type: servo::http::content_type::CONTENT_TYPE) // Status = 200
+servo::http::not_found(body: String, content_type: servo::http::content_type::CONTENT_TYPE) // Status = 404
+servo::http::server_error(body: String, content_type: servo::http::content_type::CONTENT_TYPE) // Status = 505
+```
 
 ## Configuring Server Options
 Server configuration options can be configured using the methods:<br>

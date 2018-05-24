@@ -1,4 +1,7 @@
+pub mod content_type;
+
 use std::collections::HashMap;
+use self::content_type::CONTENT_TYPE;
 
 pub struct Request {
     method : String,
@@ -8,8 +11,8 @@ pub struct Request {
 
 pub struct Response {
     status : i32,
-    content_type : String,
-    body : String,
+    content_type : CONTENT_TYPE,
+    body : Vec<u8>,
     headers : Option<HashMap<String, String>>,
 }
 
@@ -24,22 +27,38 @@ impl Request {
 }
 
 // Static route with 404 status, used as default bad request
-pub fn bad_route<'a>() -> Response {
-    let content_type = String::from("text/html");
-    let body = String::from("Unable to route request");
+pub fn not_found<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     return Response {status : 404,
                     content_type : content_type,
-                    body : body,
+                    body : Vec::from(body.as_bytes()),
                     headers : None};
 }
 
-pub fn ok<'a>(body: String) -> Response {
-    let content_type = String::from("text/html");
-    let body = body;
-    return Response {status : 200,
-                    content_type : content_type,
-                    body : body,
-                    headers : None};
+pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
+    Response {
+        status : 200,
+        content_type : content_type,
+        body : Vec::from(body.as_bytes()),
+        headers : None
+    }
+}
+
+pub fn ok_file<'a>(body: Vec<u8>, content_type: CONTENT_TYPE) -> Response {
+    Response {
+        status : 200,
+        content_type : content_type,
+        body : body,
+        headers : None
+    }
+}
+
+pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
+    Response {
+        status : 505,
+        content_type : content_type,
+        body : Vec::from(body.as_bytes()),
+        headers : None
+    }
 }
 
 /*
@@ -102,7 +121,7 @@ pub fn route_request<'a>(request : Request) -> Response {
     let route_function = route_map.get(&route_request);
     match route_function {
         Some(x) => x(request),
-        None => bad_route(),
+        None => server_error(String::from("Unable to route request"), CONTENT_TYPE::TEXT_HTML),
     }
 }
 
@@ -111,10 +130,10 @@ Takes a Response object and turns it into a single String that
 can be converted to a byte-stream and written back to the user.
 */
 impl Response {
-    pub fn stringify(self) -> String {
+    fn stringify(&self) -> String {
         let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n", 
                                             self.status, 
-                                            self.content_type));
+                                            self.content_type.stringify()));
         if self.headers.is_some() {
             let headers = self.headers.as_ref().unwrap();
             for key in headers.keys() {
@@ -122,8 +141,13 @@ impl Response {
             }
         }
         res = res + "\r\n";
-        res = res + &format!("{}", self.body);
-        res = res + "\r\n\r\n";
         res
+    }
+
+    pub fn byteify(&mut self) -> Vec<u8> {
+        let part1 = self.stringify();
+        let mut result: Vec<u8> = Vec::from(part1.as_bytes());
+        result.append(&mut self.body);
+        result
     }
 }
