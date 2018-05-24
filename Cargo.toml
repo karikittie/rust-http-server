@@ -6,7 +6,7 @@ authors = ["Karis Sponsler <karis.sponsler@gmail.com>",
 
 [lib]
 name = "servo"
-path = "src/servo.rs"
+path = "src/servo/mod.rs"
 
 [[bin]]
 name = "server"
