@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::ffi::OsStr;
 
+#[derive(Copy, Clone)]
 pub enum CONTENT_TYPE {
     TEXT_HTML,
     TEXT_CSS,
