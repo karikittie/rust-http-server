@@ -15,12 +15,12 @@ pub struct Request {
 //#[derive(Eq,Debug)]
 pub struct Response {
     status : i32,
-    content_type : Option<CONTENT_TYPE>,
+    content_type : CONTENT_TYPE,
     body : Vec<u8>,
     headers : Option<HashMap<String, String>>,
 }
 
-/* Equality implementations for testing purposes
+// Equality implementations for testing purposes
 
 // Allows for equality comparisons between requests/responses
 impl PartialEq for Request {
@@ -34,9 +34,12 @@ impl PartialEq for Request {
 impl PartialEq for Response {
     fn eq(&self, other: &Response) -> bool {
         self.status == other.status
-        && self.content_type == other.content_type
+        //&& self.content_type == other.content_type
         && self.body == other.body
         && self.headers == other.headers
+    }
+}
+
 /// Builds a Response struct from a given body and content type with a status = 404
 pub fn not_found<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     return Response {status : 404,
@@ -54,20 +57,8 @@ pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
         headers : None
     }
 }
-*/
 
-// Struct implementations
-
-impl Request {
-
-    // Creates a new request object with default values
-    pub fn new() -> Request {
-        let request = Request { method: "".to_string(),
-                                route: "".to_string(),
-                                headers: HashMap::new(),
-        };
-        request
-/// Builds a Response struct from a given body (as Vec<u8>) and content type with a status = 200
+/// Builds a Response struct from a given body (of Vec<u8>) and content type with a status = 200
 pub fn ok_file<'a>(body: Vec<u8>, content_type: CONTENT_TYPE) -> Response {
     Response {
         status : 200,
@@ -75,43 +66,8 @@ pub fn ok_file<'a>(body: Vec<u8>, content_type: CONTENT_TYPE) -> Response {
         body : body,
         headers : None
     }
+}
 
-    /*
-    Takes the raw request string and transforms it into a Request object.
-    TODO: Function needs to be broken up. Also params and args need to be
-    initialized.
-    */
-    pub fn get_request_obj(mut self, request : &str) -> Request {
-        let request = request.trim_left();
-        let lines = request.lines();
-        let mut i = 0;
-        let mut found_method : String = String::default();
-        let mut found_route : String = String::default();
-        let mut found_headers : HashMap<String, String> = HashMap::new();
-        for line in lines {
-            if i == 0 {
-                let first_args : Vec<&str> = line.split_whitespace().collect();
-                found_method = first_args[0].to_string();
-                found_route = first_args[1].to_string();
-                if found_route.ends_with("/") {
-                    found_route.trim_right_matches("/");
-                }
-            }
-            else {
-                let pair : Vec<&str> = line.split(":").collect();
-                if pair.len() > 1 {
-                    let key = pair[0];
-                    let value = pair[1].trim_left();
-                    found_headers.insert(key.to_string(), value.to_string());
-                }
-            }
-            i += 1;
-        }
-
-            self.method = found_method;
-            self.route = found_route;
-            self.headers = found_headers;
-            self
 /// Builds a Response struct from a given body and content type with a status = 505
 pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     Response {
@@ -120,6 +76,7 @@ pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
         body : Vec::from(body.as_bytes()),
         headers : None
     }
+}
 
 /*
 Takes the raw request string and transforms it into a Request object.
@@ -158,45 +115,45 @@ impl Request {
         new_request
     }
 
-        // Request getters
-        pub fn get_method(&self) -> String {
-            self.method.clone()
-        }
+    // Request getters
+    pub fn get_method(&self) -> String {
+        self.method.clone()
+    }
 
-        pub fn get_route(&self) -> String {
-            let mut route = self.method.clone();
-            let cloned_route = self.route.clone();
-            route.push(' ');
-            route.push_str(&cloned_route);
-            route
-        }
+    pub fn get_route(&self) -> String {
+        let mut route = self.method.clone();
+        let cloned_route = self.route.clone();
+        route.push(' ');
+        route.push_str(&cloned_route);
+        route
+    }
 
-        pub fn get_headers(&self) -> HashMap<String, String> {
-            self.headers.clone()
-        }
+    pub fn get_headers(&self) -> HashMap<String, String> {
+        self.headers.clone()
+    }
 
-        // Request setters
-        pub fn with_method(mut self, req_method: String) -> Request {
-            self.method = req_method;
-            self
-        }
+    // Request setters
+    pub fn with_method(mut self, req_method: String) -> Request {
+        self.method = req_method;
+        self
+    }
 
-        pub fn with_route(mut self, res_route: String) -> Request {
-            self.route = res_route;
-            self
-        }
+    pub fn with_route(mut self, res_route: String) -> Request {
+        self.route = res_route;
+        self
+    }
 
-        // Arg copied over as new header hashmap
-        pub fn with_headers(mut self, req_headers: HashMap<String, String>) -> Request {
-            self.headers = req_headers;
-            self
-        }
+    // Arg copied over as new header hashmap
+    pub fn with_headers(mut self, req_headers: HashMap<String, String>) -> Request {
+        self.headers = req_headers;
+        self
+    }
 
-        // Adds to existing hash map
-        pub fn with_header(mut self, req_header: (String, String)) -> Request {
-            self.headers.insert(req_header.0, req_header.1);
-            self
-        }
+    // Adds to existing hash map
+    pub fn with_header(mut self, req_header: (String, String)) -> Request {
+        self.headers.insert(req_header.0, req_header.1);
+        self
+    }
 }
 
 /*
@@ -204,11 +161,10 @@ Takes a Response object and turns it into a single String that
 can be converted to a byte-stream and written back to the user.
 */
 impl Response {
-
         // Create a new response struct with default values
         pub fn new() -> Response {
             let response = Response { status: 0_i32,
-    				                  content_type: None,
+    				                  content_type: CONTENT_TYPE::TEXT_HTML,
     				                  body: Vec::new(),
     				                  headers: None
     	    };
@@ -218,7 +174,7 @@ impl Response {
         fn stringify(&self) -> String {
             let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n",
                                                 self.status,
-                                                self.content_type.as_ref().unwrap().stringify()));
+                                                self.content_type.stringify()));
             if self.headers.is_some() {
                 let headers = self.headers.as_ref().unwrap();
                 for key in headers.keys() {
@@ -241,7 +197,7 @@ impl Response {
             self.status.clone()
         }
 
-        pub fn get_content_type(&self) -> Option<CONTENT_TYPE> {
+        pub fn get_content_type(&self) -> CONTENT_TYPE {
             self.content_type.clone()
         }
 
@@ -260,7 +216,7 @@ impl Response {
         }
 
         pub fn with_content_type(mut self, res_content: CONTENT_TYPE) -> Response {
-            self.content_type = Option::from(res_content);
+            self.content_type = res_content;
             self
         }
 
@@ -306,43 +262,6 @@ pub fn route_request<'a>(request : Request) -> Response {
     match route_function {
         Some(x) => x(request),
         None => server_error(String::from("Unable to route request"), CONTENT_TYPE::TEXT_HTML),
-    }
-}
-
-// Public functions not associated with request/response structs
-
-// Static route with 404 status, used as default bad request
-pub fn not_found<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
-    return Response {status : 404,
-                    content_type : Option::from(content_type),
-                    body : Vec::from(body.as_bytes()),
-                    headers : None};
-}
-
-pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
-    Response {
-        status : 200,
-        content_type : Option::from(content_type),
-        body : Vec::from(body.as_bytes()),
-        headers : None
-    }
-}
-
-pub fn ok_file<'a>(body: Vec<u8>, content_type: CONTENT_TYPE) -> Response {
-    Response {
-        status : 200,
-        content_type : Option::from(content_type),
-        body : body,
-        headers : None
-    }
-}
-
-pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
-    Response {
-        status : 505,
-        content_type : Option::from(content_type),
-        body : Vec::from(body.as_bytes()),
-        headers : None
     }
 }
 
