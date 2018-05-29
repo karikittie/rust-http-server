@@ -1,9 +1,7 @@
 use std::path::Path;
 use std::ffi::OsStr;
 
-/// These are all the different types of HTTP content
-/// supported by servo. Used in the functions that build
-/// Response objects in servo::http.
+#[derive(Copy, Clone)]
 pub enum CONTENT_TYPE {
     TEXT_HTML,
     TEXT_CSS,
