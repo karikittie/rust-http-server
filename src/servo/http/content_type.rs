@@ -16,6 +16,8 @@ pub enum CONTENT_TYPE {
 }
 
 impl CONTENT_TYPE {
+    /// This transforms the enum into the actual string that is represented in the
+    /// HTTP response string.
     pub fn stringify(&self) -> String {
         match self {
             &CONTENT_TYPE::TEXT_HTML => String::from("text/html"),
@@ -32,6 +34,8 @@ impl CONTENT_TYPE {
     }
 }
 
+/// Returns the content type enum that is associated with a certain
+/// filename by parsing out the extension.
 pub fn get_content_type(filename: &String) -> CONTENT_TYPE {
     let ext = Path::new(filename)
         .extension()
@@ -42,6 +46,8 @@ pub fn get_content_type(filename: &String) -> CONTENT_TYPE {
     }
 }
 
+// This function has all the mappings to the supported content types.
+// New content types need to be added here as well to be supported.
 fn get_file_type_from_extension(ext: &str) -> CONTENT_TYPE {
     match ext {
         "jpg" => CONTENT_TYPE::IMAGE_JPG,

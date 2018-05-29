@@ -7,6 +7,10 @@
 # Executables
 *.exe
 
+# Default Directories
+/templates/
+/static/
+
 # Others
 .DS_Store
 
