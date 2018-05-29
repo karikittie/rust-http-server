@@ -26,7 +26,7 @@ impl Request {
     }
 }
 
-// Static route with 404 status, used as default bad request
+/// Builds a Response struct from a given body and content type with a status = 404
 pub fn not_found<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     return Response {status : 404,
                     content_type : content_type,
@@ -34,6 +34,7 @@ pub fn not_found<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
                     headers : None};
 }
 
+/// Builds a Response struct from a given body and content type with a status = 200
 pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     Response {
         status : 200,
@@ -43,6 +44,7 @@ pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     }
 }
 
+/// Builds a Response struct from a given body (as Vec<u8>) and content type with a status = 200
 pub fn ok_file<'a>(body: Vec<u8>, content_type: CONTENT_TYPE) -> Response {
     Response {
         status : 200,
@@ -52,6 +54,7 @@ pub fn ok_file<'a>(body: Vec<u8>, content_type: CONTENT_TYPE) -> Response {
     }
 }
 
+/// Builds a Response struct from a given body and content type with a status = 505
 pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
     Response {
         status : 505,
@@ -62,18 +65,10 @@ pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
 }
 
 /*
-Gets the map of route Strings -> user-defined functions that take
-a Request object and return a Response object.
-*/
-fn get_route_map() -> Box<HashMap<String, fn(Request) -> Response>> {
-    let route_map : HashMap<String, fn(Request) -> Response> = HashMap::new();
-    return Box::new(route_map);
-}
-
-/*
 Takes the raw request string and transforms it into a Request object.
 */
 impl Request {
+    /// Creates a Request object from a HTTP request.
     pub fn from(request : &str) -> Request {
         let request = request.trim_left();
         let lines = request.lines();
@@ -101,27 +96,9 @@ impl Request {
             i += 1;
         }
         let new_request = Request {method : found_method, 
-                                route : found_route,
-                                headers : found_headers};
-        return new_request;
-    }
-}
-
-/*
-Takes a Request object and routes it via the method + ' ' + route
-to the appropriate user-defined function.
-TODO: we need to add the ability to pass along URL arguments to the
-user-defined function.
-*/
-pub fn route_request<'a>(request : Request) -> Response {
-    let route_map = get_route_map();
-    let mut route_request: String = request.method.clone();
-    route_request.push(' ');
-    route_request.push_str(&request.route);
-    let route_function = route_map.get(&route_request);
-    match route_function {
-        Some(x) => x(request),
-        None => server_error(String::from("Unable to route request"), CONTENT_TYPE::TEXT_HTML),
+                                   route : found_route,
+                                   headers : found_headers};
+        new_request
     }
 }
 

@@ -20,6 +20,9 @@ servo::http::ok_file(body: Vec<u8>, content_type: servo::http::content_type::CON
 servo::http::not_found(body: String, content_type: servo::http::content_type::CONTENT_TYPE) // Status = 404
 servo::http::server_error(body: String, content_type: servo::http::content_type::CONTENT_TYPE) // Status = 505
 ```
+There is also a method called `get_html(filename) -> String` which will pull from the HTML directory defined in the configs. 
+The default directory for these is `templates/`. This can be used with the other functions to return HTML like so:<br>
+`return ok(get_html("my_file.html", CONTENT_TYPE::TEXT_HTML))`
 
 ## Configuring Server Options
 Server configuration options can be configured using the methods:<br>
