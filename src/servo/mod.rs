@@ -23,7 +23,6 @@ pub const HTML_DIR: &'static str = "htmldir";
 
 // Static vars are to avoid having to do dependency injection to have
 // configuration persistence.
-static mut CONFIGS: Option<Configuration> = None;
 static mut SERVER_CONFIGS: Option<HashMap<&'static str, String>> = None;
 static mut ROUTE_CONFIGS: Option<HashMap<String, CallBack>> = None;
 
@@ -89,6 +88,14 @@ impl Configuration {
     /// Returns the port in the format `1234` (no colons)
     pub fn get_port(&self) -> String {
         self.server.port.clone()
+    }
+
+    pub fn get_static_directory(&self) -> String {
+        self.server.static_dir.clone()
+    }
+
+    pub fn get_html_directory(&self) -> String {
+        self.server.html_dir.clone()
     }
 }
 
@@ -159,17 +166,8 @@ fn set_server_attr(key: &'static str, value: String) {
 /// Changes to this object do not affect the project's
 /// configuration. This must be done using the setters
 /// in this module.
-pub fn get_configs<'a>() -> &'a Configuration {
-    unsafe {
-        match &mut CONFIGS {
-            &mut Some(ref config) => &config,
-            &mut None => {
-                let new_configs = Configuration::new();
-                CONFIGS = Option::from(new_configs);
-                get_configs()
-            },
-        }
-    }
+pub fn get_configs() -> Configuration {
+    Configuration::new()
 }
 
 /*
