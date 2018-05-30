@@ -82,6 +82,14 @@ pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
 Takes the raw request string and transforms it into a Request object.
 */
 impl Request {
+    pub fn new() -> Request {
+        Request {
+            method: String::from("GET"),
+            route: String::from(""),
+            headers: HashMap::new()
+        }
+    }
+
     /// Creates a Request object from a HTTP request.
     pub fn from(request : &str) -> Request {
         let request = request.trim_left();
