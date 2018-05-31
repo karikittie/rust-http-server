@@ -46,40 +46,38 @@ impl PartialEq for Response {
 
 /// Builds a Response struct from a given body and content type with a status = 404
 pub fn not_found<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
-    return Response {status : 404,
-                    content_type : content_type,
-                    body : Vec::from(body.as_bytes()),
-                    headers : None};
+    let response = Response::new().with_status(404)
+                                  .with_content_type(content_type)
+                                  .with_body(Vec::from(body.as_bytes()))
+                                  .with_headers(None);
+    response
 }
 
 /// Builds a Response struct from a given body and content type with a status = 200
 pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
-    Response {
-        status : 200,
-        content_type : content_type,
-        body : Vec::from(body.as_bytes()),
-        headers : None
-    }
+    let response = Response::new().with_status(200)
+                                  .with_content_type(content_type)
+                                  .with_body(Vec::from(body.as_bytes()))
+                                  .with_headers(None);
+    response
 }
 
 /// Builds a Response struct from a given body (of Vec<u8>) and content type with a status = 200
 pub fn ok_file<'a>(body: Vec<u8>, content_type: CONTENT_TYPE) -> Response {
-    Response {
-        status : 200,
-        content_type : content_type,
-        body : body,
-        headers : None
-    }
+    let response = Response::new().with_status(200)
+                                  .with_content_type(content_type)
+                                  .with_body(body)
+                                  .with_headers(None);
+    response
 }
 
 /// Builds a Response struct from a given body and content type with a status = 505
 pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
-    Response {
-        status : 505,
-        content_type : content_type,
-        body : Vec::from(body.as_bytes()),
-        headers : None
-    }
+    let response = Response::new().with_status(505)
+                                  .with_content_type(content_type)
+                                  .with_body(Vec::from(body.as_bytes()))
+                                  .with_headers(None);
+    response
 }
 
 /*
@@ -123,11 +121,12 @@ impl Request {
             }
             i += 1;
         }
-        let new_request = Request {method : found_method,
-                                   route : found_route,
-                                   headers : found_headers,
-                                   params : Vec::new(),
-                                   args : HashMap::new(),};
+
+        let new_request = Request::new().with_method(found_method)
+                                        .with_route(found_route)
+                                        .with_headers(found_headers)
+                                        .with_params(Vec::new())
+                                        .with_args(HashMap::new());
         new_request
     }
 
@@ -149,7 +148,7 @@ impl Request {
     }
 
     pub fn get_params(&self) -> Vec<String> {
-    self.params.clone()
+        self.params.clone()
     }
 
     pub fn get_args(&self) -> HashMap<String, String> {
@@ -218,7 +217,7 @@ impl Response {
                                                 self.status,
                                                 self.content_type.stringify()));
             if self.headers.is_some() {
-                let headers = self.headers.as_ref().unwrap();
+                let headers = self.get_headers().unwrap();
                 for key in headers.keys() {
                     res = res + &format!("{}: {}", key, headers[key]);
                 }
@@ -313,5 +312,5 @@ a Request object and return a Response object.
 */
 fn get_route_map() -> Box<HashMap<String, fn(Request) -> Response>> {
     let route_map : HashMap<String, fn(Request) -> Response> = HashMap::new();
-    return Box::new(route_map);
+    Box::new(route_map)
 }
