@@ -1,7 +1,8 @@
 use std::path::Path;
 use std::ffi::OsStr;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
+#[allow(non_camel_case_types)]
 pub enum CONTENT_TYPE {
     TEXT_HTML,
     TEXT_CSS,

@@ -4,11 +4,13 @@ use std::collections::HashMap;
 use self::content_type::CONTENT_TYPE;
 
 // User request
-//#[derive(Eq,Debug)]
+#[derive(Eq,Debug)]
 pub struct Request {
     method : String,
     route : String,
     headers : HashMap<String, String>,
+    params : Vec<String>,
+    args : HashMap<String, String>,
 }
 
 // Server response
@@ -28,6 +30,8 @@ impl PartialEq for Request {
         self.method == other.method
         && self.route == other.route
         && self.headers == other.headers
+        && self.params == other.params
+        && self.args == other.args
     }
 }
 
@@ -86,7 +90,9 @@ impl Request {
         Request {
             method: String::from("GET"),
             route: String::from(""),
-            headers: HashMap::new()
+            headers: HashMap::new(),
+            params : Vec::new(),
+            args : HashMap::new(),
         }
     }
 
@@ -117,9 +123,11 @@ impl Request {
             }
             i += 1;
         }
-        let new_request = Request {method : found_method, 
+        let new_request = Request {method : found_method,
                                    route : found_route,
-                                   headers : found_headers};
+                                   headers : found_headers,
+                                   params : Vec::new(),
+                                   args : HashMap::new(),};
         new_request
     }
 
@@ -138,6 +146,14 @@ impl Request {
 
     pub fn get_headers(&self) -> HashMap<String, String> {
         self.headers.clone()
+    }
+
+    pub fn get_params(&self) -> Vec<String> {
+    self.params.clone()
+    }
+
+    pub fn get_args(&self) -> HashMap<String, String> {
+        self.args.clone()
     }
 
     // Request setters
@@ -162,6 +178,25 @@ impl Request {
         self.headers.insert(req_header.0, req_header.1);
         self
     }
+    pub fn with_params(mut self, req_params: Vec<String>) -> Request {
+        self.params = req_params;
+        self
+    }
+
+    pub fn with_param(mut self, req_param: String) -> Request {
+        self.params.push(req_param);
+        self
+    }
+
+    pub fn with_args(mut self, req_args: HashMap<String, String>) -> Request {
+        self.args = req_args;
+        self
+    }
+
+    pub fn with_arg(mut self, req_arg: (String, String)) -> Request {
+        self.args.insert(req_arg.0, req_arg.1);
+        self
+    }
 }
 
 /*
@@ -171,12 +206,11 @@ can be converted to a byte-stream and written back to the user.
 impl Response {
         // Create a new response struct with default values
         pub fn new() -> Response {
-            let response = Response { status: 0_i32,
-    				                  content_type: CONTENT_TYPE::TEXT_HTML,
-    				                  body: Vec::new(),
-    				                  headers: None
-    	    };
-    	    response
+            Response { status: 0_i32,
+    				   content_type: CONTENT_TYPE::TEXT_HTML,
+    				   body: Vec::new(),
+    				   headers: None
+    	    }
         }
 
         fn stringify(&self) -> String {
