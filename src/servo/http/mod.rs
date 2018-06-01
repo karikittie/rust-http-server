@@ -94,40 +94,51 @@ impl Request {
         }
     }
 
-    // Finds params contained in route and includes them in the body
-    // of the request object in the order found
-    pub fn params_from_route(mut self) -> Request {
+
+    pub fn parse_query_string(mut self) -> Request {
         // Copy route from request object
         let route: String = self.get_route();
-        // Split between path and query
+        // Split between path and query string
         let mut split: Vec<&str> = route.split("/").collect();
         // Take the right side and separate queries
         let mut queries: Vec<&str> = split.pop().unwrap().split("?").collect();
-        // Take the last item, which is the query
         // Create new string vector to collect parameters
+
+        self.params_from_route(queries.clone()).args_from_route(queries.clone().as_mut())
+    }
+
+
+    // Finds params contained in route and includes them in the body
+    // of the request object in the order found. Assumes that all params
+    // will be located after the last hyphen of the path and end with a ?
+    pub fn params_from_route(mut self, queries: Vec<&str>) -> Request {
         let mut params: Vec<String> = Vec::new();
 
         for i in queries {
-            // Push anything that isn't an argument in the query
+            // Push anything that isn't an argument in the query string
             if i.contains("=") != true{
                 params.push(i.to_string());
             }
         }
-
-        self.with_params(params)
+        self.params = params;
+        self
     }
 
-    pub fn args_from_route(mut self) -> Request {
-        /*let route: String = self.get_route();
-        let queries: Vec<&str> = route.split("?").collect();
+    // Pulls args from the route of the request object. Assumes that the first args
+    // will be located after the last ? and all others will be after ampersands
+    pub fn args_from_route(mut self, queries: &mut Vec<&str>) -> Request {
+        //Create new hashmap to collect args
         let mut args: HashMap<String, String> = HashMap::new();
+        // Separate arguments from params and separate
+        let mut arg_section: Vec<&str> = queries.pop().unwrap().split("&").collect();
 
-        for i in queries {
-            let mut section: Vec<&str> = i.split("/").collect();
-            args.push(section.pop().unwrap().to_string());
+        // Find and split argument terms
+        for i in arg_section {
+            let mut tuple: Vec<&str> = i.split("=").collect();
+            args.insert(tuple[0].to_string(), tuple[1].to_string());
         }
 
-        self.with_args(args)*/
+        self.args = args;
         self
     }
 
