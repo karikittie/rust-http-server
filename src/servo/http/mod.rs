@@ -94,6 +94,43 @@ impl Request {
         }
     }
 
+    // Finds params contained in route and includes them in the body
+    // of the request object in the order found
+    pub fn params_from_route(mut self) -> Request {
+        // Copy route from request object
+        let route: String = self.get_route();
+        // Split between path and query
+        let mut split: Vec<&str> = route.split("/").collect();
+        // Take the right side and separate queries
+        let mut queries: Vec<&str> = split.pop().unwrap().split("?").collect();
+        // Take the last item, which is the query
+        // Create new string vector to collect parameters
+        let mut params: Vec<String> = Vec::new();
+
+        for i in queries {
+            // Push anything that isn't an argument in the query
+            if i.contains("=") != true{
+                params.push(i.to_string());
+            }
+        }
+
+        self.with_params(params)
+    }
+
+    pub fn args_from_route(mut self) -> Request {
+        /*let route: String = self.get_route();
+        let queries: Vec<&str> = route.split("?").collect();
+        let mut args: HashMap<String, String> = HashMap::new();
+
+        for i in queries {
+            let mut section: Vec<&str> = i.split("/").collect();
+            args.push(section.pop().unwrap().to_string());
+        }
+
+        self.with_args(args)*/
+        self
+    }
+
     /// Creates a Request object from a HTTP request.
     pub fn from(request : &str) -> Request {
         let request = request.trim_left();
