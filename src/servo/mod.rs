@@ -255,13 +255,13 @@ fn static_route(request: Request) -> Response {
             match result {
                 Ok(_) => http::ok_file(contents, get_content_type(&filename)),
                 Err(e) => {
-                    print!("File read error: {}", e);
+                    eprintln!("File read error: {}", e);
                     http::not_found(String::from("Could not read file"), CONTENT_TYPE::TEXT_HTML)
                 },
             }
         },
         Err(e) => {
-            println!("Could not find file to serve: {:?}",e);
+            eprintln!("Could not find file to serve: {:?}",e);
             http::not_found(String::from("Could not find resource"), CONTENT_TYPE::TEXT_HTML)
         },
     }
@@ -285,13 +285,13 @@ pub fn get_html(path: &str) -> String {
                     result_string
                 },
                 Err(e) => {
-                    print!("File read error: {}", e);
+                    eprintln!("File read error: {}", e);
                     String::from("")
                 },
             }
         },
         Err(e) => {
-            print!("{}", e);
+            eprintln!("{}", e);
             String::from("")
         },
     }

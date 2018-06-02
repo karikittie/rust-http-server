@@ -19,7 +19,7 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
             Vec::from(request.as_bytes())
         },
         Err(e) => {
-            println!("Input Stream Error: {}", e);
+            eprintln!("Input Stream Error: {}", e);
             vec![]
         },
     }
@@ -31,7 +31,7 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
 fn write_output_buffer(mut stream : TcpStream, to_write : &[u8]) {
     match stream.write(to_write) {
         Ok(_) => (),
-        Err(e) => println!("Failed to reply to request: {}", e),
+        Err(e) => eprintln!("Failed to reply to request: {}", e),
     }
 }
 
@@ -46,7 +46,7 @@ fn handle_request(stream : TcpStream) {
         String::from(match str::from_utf8(&vector_buffer) {
             Ok(x) => x,
             Err(err) => {
-                print!("Error: {}", err);
+                eprintln!("Error: {}", err);
                 ""
             },
         });
@@ -77,7 +77,7 @@ fn main() {
                     handle_request(stream)
                 });
             },
-            Err(e) => println!("Error in handling request: {}", e),
+            Err(e) => eprintln!("Error in handling request: {}", e),
         }
     }
 }
