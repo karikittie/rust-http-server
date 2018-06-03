@@ -172,11 +172,12 @@ impl Request {
             i += 1;
         }
 
-        let new_request = Request::new().with_method(found_method)
+        let mut new_request = Request::new().with_method(found_method)
                                         .with_route(found_route)
                                         .with_headers(found_headers)
                                         .with_params(Vec::new())
                                         .with_args(HashMap::new());
+        new_request = new_request.parse_query_string();
         new_request
     }
 
