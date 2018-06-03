@@ -116,7 +116,7 @@ impl Request {
 
         for i in queries {
             // Push anything that isn't an argument in the query string
-            if i.contains("=") != true{
+            if i.contains("=") != true {
                 params.push(i.to_string());
             }
         }
@@ -134,8 +134,10 @@ impl Request {
 
         // Find and split argument terms
         for i in arg_section {
-            let mut tuple: Vec<&str> = i.split("=").collect();
-            args.insert(tuple[0].to_string(), tuple[1].to_string());
+                if i.contains("=") == true {
+                let mut tuple: Vec<&str> = i.split("=").collect();
+                args.insert(tuple[0].to_string(), tuple[1].to_string());
+            }
         }
 
         self.args = args;

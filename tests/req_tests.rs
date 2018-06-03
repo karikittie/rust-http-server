@@ -89,3 +89,71 @@ fn test_add_route() {
 fn _testing_callback(req: Request) -> Response {
     servo::http::ok(String::from("test me"), CONTENT_TYPE::TEXT_HTML)
 }
+
+// Tests for parsing the query string to params and args
+#[test]
+fn test_params_from_route() {
+    let mut request = Request::new().with_route("/test/route/param?arg1=1&arg2=2".to_string());
+    let vec: Vec<&str> = ["param", "arg1=1&arg2=2"].to_vec();
+    request = request.params_from_route(vec);
+    assert!(request.get_params() == ["param".to_string()].to_vec())
+}
+
+#[test]
+fn test_multiple_params_from_route() {
+    let mut request = Request::new()
+                              .with_route("/test/route/param1?param2?arg1=1&arg2=2".to_string());
+    let vec: Vec<&str> = ["param1", "param2", "arg1=1&arg2=2"].to_vec();
+    request = request.params_from_route(vec);
+    assert!(request.get_params() == ["param1".to_string(), "param2".to_string()].to_vec())
+}
+
+#[test]
+fn test_empty_params_from_route() {
+    let mut request = Request::new()
+                              .with_route("/test/route/arg1=1&arg2=2".to_string());
+    let vec: Vec<&str> = ["arg1=1&arg2=2"].to_vec();
+    request = request.params_from_route(vec);
+    let compare: Vec<String> = Vec::new();
+    assert!(request.get_params() == compare)
+}
+
+#[test]
+fn test_args_from_route() {
+    let mut request = Request::new().with_route("/test/route/param?arg1=1".to_string());
+    let mut vec: Vec<&str> = ["param", "arg1=1"].to_vec();
+    let hash: HashMap<String,String> = [("arg1".to_string(), "1".to_string())]
+                                        .iter().cloned().collect();
+    request = request.args_from_route(vec.as_mut());
+    assert!(request.get_args() == hash)
+}
+
+#[test]
+fn test_multiple_args_from_route() {
+    let mut request = Request::new().with_route("/test/route/param?arg1=1&arg2=2".to_string());
+    let mut vec: Vec<&str> = ["param", "arg1=1&arg2=2"].to_vec();
+    let hash: HashMap<String,String> = [("arg1".to_string(), "1".to_string()),
+                                        ("arg2".to_string(), "2".to_string())]
+                                        .iter().cloned().collect();
+    request = request.args_from_route(vec.as_mut());
+    assert!(request.get_args() == hash)
+}
+
+#[test]
+fn test_empty_args_from_route() {
+    let mut request = Request::new().with_route("/test/route/param?".to_string());
+    let mut vec: Vec<&str> = ["param"].to_vec();
+    let hash: HashMap<String,String> = HashMap::new();
+    request = request.args_from_route(vec.as_mut());
+    assert!(request.get_args() == hash)
+}
+
+#[test]
+fn test_parse_query_string() {
+    let mut request = Request::new().with_route("/test/route/param?arg1=1&arg2=2".to_string());
+    let hash: HashMap<String,String> = [("arg1".to_string(), "1".to_string()),
+                                        ("arg2".to_string(), "2".to_string())]
+                                        .iter().cloned().collect();
+    request = request.parse_query_string();
+    assert!(request.get_params() == ["param".to_string()].to_vec(), request.get_args() == hash)
+}
