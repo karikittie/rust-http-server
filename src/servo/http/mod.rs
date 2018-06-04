@@ -100,9 +100,13 @@ impl Request {
         let route: String = self.get_route();
         // Split between path and query string
         let mut split: Vec<&str> = route.split("/").collect();
-        // Take the right side and separate queries
+        // Check if the wildcard is present at the end of the string.
+        // Take the right side and separate queries.
+        let end = split[(split.len()-1) as usize];
+        if end == "{}".to_string() {
+            split.pop();
+        }
         let mut queries: Vec<&str> = split.pop().unwrap().split("?").collect();
-        // Create new string vector to collect parameters
 
         self.params_from_route(queries.clone()).args_from_route(queries.clone().as_mut())
     }
@@ -116,7 +120,7 @@ impl Request {
 
         for i in queries {
             // Push anything that isn't an argument in the query string
-            if i.contains("=") != true {
+            if i.contains("=") != true && i.is_empty() != true {
                 params.push(i.to_string());
             }
         }
