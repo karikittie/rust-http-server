@@ -35,7 +35,7 @@ impl PartialEq for Request {
 impl PartialEq for Response {
     fn eq(&self, other: &Response) -> bool {
         self.status == other.status
-        //&& self.content_type == other.content_type
+        && self.content_type == other.content_type
         && self.body == other.body
         && self.headers == other.headers
     }
@@ -99,12 +99,7 @@ impl Request {
         let route: String = self.get_route();
         // Split between path and query string
         let mut split: Vec<&str> = route.split("/").collect();
-        // Check if the wildcard is present at the end of the string.
         // Take the right side and separate queries.
-        let end = split[(split.len()-1) as usize];
-        if end == "{}".to_string() {
-            split.pop();
-        }
         let mut queries: Vec<&str> = split.pop().unwrap().split("?").collect();
 
         self.params_from_route(queries.clone()).args_from_route(queries.clone().as_mut())

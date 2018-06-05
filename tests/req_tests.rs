@@ -131,10 +131,11 @@ fn test_args_from_route() {
 
 #[test]
 fn test_multiple_args_from_route() {
-    let mut request = Request::new().with_route("/test/route/param?arg1=1&arg2=2".to_string());
-    let mut query: Vec<&str> = ["param", "arg1=1&arg2=2"].to_vec();
+    let mut request = Request::new().with_route("/test/route/param?arg1=1&arg2=2&arg3=3".to_string());
+    let mut query: Vec<&str> = ["param", "arg1=1&arg2=2&arg3=3"].to_vec();
     let args: HashMap<String,String> = [("arg1".to_string(), "1".to_string()),
-                                        ("arg2".to_string(), "2".to_string())]
+                                        ("arg2".to_string(), "2".to_string()),
+                                        ("arg3".to_string(), "3".to_string())]
                                         .iter().cloned().collect();
     request = request.args_from_route(query.as_mut());
     assert_eq!(request.get_args() , args)
@@ -178,15 +179,5 @@ fn test_parse_query_string_none() {
     let args: HashMap<String,String> = HashMap::new();
     request = request.parse_query_string();
     assert_eq!(request.get_params() , params);
-    assert_eq!(request.get_args() , args)
-}
-
-#[test]
-fn test_parse_query_string_wildcard() {
-    let mut request = Request::new().with_route("/test/route/param?arg1=1/{}".to_string());
-    let args: HashMap<String,String> = [("arg1".to_string(), "1".to_string())]
-                                        .iter().cloned().collect();
-    request = request.parse_query_string();
-    assert_eq!(request.get_params() , ["param".to_string()].to_vec());
     assert_eq!(request.get_args() , args)
 }
