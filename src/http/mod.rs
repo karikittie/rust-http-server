@@ -9,6 +9,7 @@ pub struct Request {
     method : String,
     route : String,
     headers : HashMap<String, String>,
+    params : Vec<String>,
     pub args : Vec<String>,
 }
 
@@ -29,6 +30,8 @@ impl PartialEq for Request {
         self.method == other.method
         && self.route == other.route
         && self.headers == other.headers
+        && self.params == other.params
+        && self.args == other.args
     }
 }
 
@@ -88,6 +91,7 @@ impl Request {
             method : String::from("GET"),
             route : String::from(""),
             headers : HashMap::new(),
+            params : Vec::new(),
             args : Vec::new(),
         }
     }
@@ -126,7 +130,7 @@ impl Request {
     // will be located after the last ? and all others will be after ampersands
     pub fn args_from_route(mut self, queries: &mut Vec<&str>) -> Request {
         //Create new hashmap to collect args
-        let mut args: HashMap<String, String> = HashMap::new();
+        let mut args: Vec<String> = Vec::new();
         // Separate arguments from params and separate
         let mut arg_section: Vec<&str> = queries.pop().unwrap().split("&").collect();
 
@@ -134,7 +138,7 @@ impl Request {
         for i in arg_section {
                 if i.contains("=") == true {
                 let mut tuple: Vec<&str> = i.split("=").collect();
-                args.insert(tuple[0].to_string(), tuple[1].to_string());
+                args.push(tuple[1].to_string());
             }
         }
 
@@ -172,7 +176,7 @@ impl Request {
         let new_request = Request::new()
                                   .with_method(found_method)
                                   .with_route(found_route)
-                                  .with_header(found_headers)
+                                  .with_headers(found_headers)
                                   .parse_query_string();
         new_request
     }

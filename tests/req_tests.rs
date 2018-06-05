@@ -1,6 +1,6 @@
 extern crate servo;
 use servo::http::{Request, Response};
-use servo::http::content_type::ContentType;
+use servo::http::ContentType::ContentType;
 use std::collections::HashMap;
 
 
@@ -29,11 +29,11 @@ fn response_eq_test() {
     map.insert("test".to_string(), "header".to_string());
 
     let original = Response::new().with_status(status)
-				                  .with_content_type(content.clone())
+				                  .with_ContentType(content.clone())
 				                  .with_body(body.clone().to_vec())
 				                  .with_headers(Option::from(map.clone()));
     let response = Response::new().with_status(status)
-				                  .with_content_type(content)
+				                  .with_ContentType(content)
 				                  .with_body(body.to_vec())
 				                  .with_headers(Option::from(map));
     assert_eq!(true, original == response)
@@ -52,12 +52,11 @@ fn request_neq_test() {
 fn response_neq_test() {
     let original = Response::new();
     let request = Response::new().with_status(404_i32)
-                                 .with_content_type(ContentType::TextHtml)
+                                 .with_ContentType(ContentType::TextHtml)
                                  .with_body(b"content".to_vec());
 
     assert_eq!(true, original != request)
 }
-<<<<<<< HEAD
 
 #[test]
 fn test_set_configs() {
@@ -88,7 +87,7 @@ fn test_add_route() {
 }
 
 fn _testing_callback(req: Request) -> Response {
-    servo::http::ok(String::from("test me"), CONTENT_TYPE::TEXT_HTML)
+    servo::http::ok(String::from("test me"), ContentType::TextHtml)
 }
 
 // Tests for parsing the query string to params and args
