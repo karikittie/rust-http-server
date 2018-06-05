@@ -1,6 +1,6 @@
 extern crate servo;
 use servo::http::{Request, Response};
-use servo::http::content_type::CONTENT_TYPE;
+use servo::http::content_type::ContentType;
 use std::collections::HashMap;
 
 
@@ -23,7 +23,7 @@ fn request_eq_test(){
 #[test]
 fn response_eq_test() {
     let status = 0_i32;
-    let content = CONTENT_TYPE::TEXT_HTML;
+    let content = ContentType::TextHtml;
     let body = b"body";
     let mut map = HashMap::new();
     map.insert("test".to_string(), "header".to_string());
@@ -52,7 +52,7 @@ fn request_neq_test() {
 fn response_neq_test() {
     let original = Response::new();
     let request = Response::new().with_status(404_i32)
-                                 .with_content_type(CONTENT_TYPE::TEXT_HTML)
+                                 .with_content_type(ContentType::TextHtml)
                                  .with_body(b"content".to_vec());
 
     assert_eq!(true, original != request)
