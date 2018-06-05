@@ -38,7 +38,7 @@ impl PartialEq for Request {
 impl PartialEq for Response {
     fn eq(&self, other: &Response) -> bool {
         self.status == other.status
-        && self.content_type == other.content_type
+        // && self.content_type == other.content_type
         && self.body == other.body
         && self.headers == other.headers
     }
