@@ -1,21 +1,22 @@
 pub mod content_type;
 
 use std::collections::HashMap;
-use self::content_type::CONTENT_TYPE;
+use self::content_type::ContentType;
 
 // User request
-//#[derive(Eq,Debug)]
+#[derive(Eq,Debug)]
 pub struct Request {
     method : String,
     route : String,
     headers : HashMap<String, String>,
+    pub args : Vec<String>,
 }
 
 // Server response
-//#[derive(Eq,Debug)]
+#[derive(Eq,Debug)]
 pub struct Response {
     status : i32,
-    content_type : CONTENT_TYPE,
+    content_type : ContentType,
     body : Vec<u8>,
     headers : Option<HashMap<String, String>>,
 }
@@ -41,7 +42,7 @@ impl PartialEq for Response {
 }
 
 /// Builds a Response struct from a given body and content type with a status = 404
-pub fn not_found<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
+pub fn not_found<'a>(body: String, content_type: ContentType) -> Response {
     return Response {status : 404,
                     content_type : content_type,
                     body : Vec::from(body.as_bytes()),
@@ -49,7 +50,7 @@ pub fn not_found<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
 }
 
 /// Builds a Response struct from a given body and content type with a status = 200
-pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
+pub fn ok<'a>(body: String, content_type: ContentType) -> Response {
     Response {
         status : 200,
         content_type : content_type,
@@ -59,7 +60,7 @@ pub fn ok<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
 }
 
 /// Builds a Response struct from a given body (of Vec<u8>) and content type with a status = 200
-pub fn ok_file<'a>(body: Vec<u8>, content_type: CONTENT_TYPE) -> Response {
+pub fn ok_file<'a>(body: Vec<u8>, content_type: ContentType) -> Response {
     Response {
         status : 200,
         content_type : content_type,
@@ -69,7 +70,7 @@ pub fn ok_file<'a>(body: Vec<u8>, content_type: CONTENT_TYPE) -> Response {
 }
 
 /// Builds a Response struct from a given body and content type with a status = 505
-pub fn server_error<'a>(body: String, content_type: CONTENT_TYPE) -> Response {
+pub fn server_error<'a>(body: String, content_type: ContentType) -> Response {
     Response {
         status : 505,
         content_type : content_type,
@@ -84,9 +85,10 @@ Takes the raw request string and transforms it into a Request object.
 impl Request {
     pub fn new() -> Request {
         Request {
-            method: String::from("GET"),
-            route: String::from(""),
-            headers: HashMap::new()
+            method : String::from("GET"),
+            route : String::from(""),
+            headers : HashMap::new(),
+            args : vec![],
         }
     }
 
@@ -119,7 +121,8 @@ impl Request {
         }
         let new_request = Request {method : found_method, 
                                    route : found_route,
-                                   headers : found_headers};
+                                   headers : found_headers,
+                                   args : vec![]};
         new_request
     }
 
@@ -151,6 +154,11 @@ impl Request {
         self
     }
 
+    pub fn with_args(mut self, args: Vec<String>) -> Request {
+        self.args = args;
+        self
+    }
+
     // Arg copied over as new header hashmap
     pub fn with_headers(mut self, req_headers: HashMap<String, String>) -> Request {
         self.headers = req_headers;
@@ -172,7 +180,7 @@ impl Response {
         // Create a new response struct with default values
         pub fn new() -> Response {
             let response = Response { status: 0_i32,
-    				                  content_type: CONTENT_TYPE::TEXT_HTML,
+    				                  content_type: ContentType::TextHtml,
     				                  body: Vec::new(),
     				                  headers: None
     	    };
@@ -205,7 +213,7 @@ impl Response {
             self.status.clone()
         }
 
-        pub fn get_content_type(&self) -> CONTENT_TYPE {
+        pub fn get_content_type(&self) -> ContentType {
             self.content_type.clone()
         }
 
@@ -223,7 +231,7 @@ impl Response {
             self
         }
 
-        pub fn with_content_type(mut self, res_content: CONTENT_TYPE) -> Response {
+        pub fn with_content_type(mut self, res_content: ContentType) -> Response {
             self.content_type = res_content;
             self
         }
@@ -269,7 +277,7 @@ pub fn route_request<'a>(request : Request) -> Response {
     let route_function = route_map.get(&route_request);
     match route_function {
         Some(x) => x(request),
-        None => server_error(String::from("Unable to route request"), CONTENT_TYPE::TEXT_HTML),
+        None => server_error(String::from("Unable to route request"), ContentType::TextHtml),
     }
 }
 
