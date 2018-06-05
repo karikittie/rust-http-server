@@ -9,8 +9,8 @@ pub struct Request {
     method : String,
     route : String,
     headers : HashMap<String, String>,
-    params : Vec<String>,
-    pub args : Vec<String>,
+    // params : Vec<String>,
+    params : HashMap<String, String>,
 }
 
 // Server response
@@ -31,10 +31,11 @@ impl PartialEq for Request {
         && self.route == other.route
         && self.headers == other.headers
         && self.params == other.params
-        && self.args == other.args
+        // && self.args == other.args
     }
 }
 
+// Comparing content types causes stack overflow
 impl PartialEq for Response {
     fn eq(&self, other: &Response) -> bool {
         self.status == other.status
@@ -91,58 +92,32 @@ impl Request {
             method : String::from("GET"),
             route : String::from(""),
             headers : HashMap::new(),
-            params : Vec::new(),
-            args : Vec::new(),
+            // params : Vec::new(),
+            params : HashMap::new(),
         }
     }
 
-    // The following three methods are helper functions used in the "from" method to
-    // extract the params and args from the route of a request.
-    pub fn parse_query_string(self) -> Request {
+    // Pulls params from the route of the request object. Assumes that the first params
+    // will be located after the last ? and all others will be after ampersands
+    pub fn params_from_route(mut self) -> Request {
+        //Create new hashmap to collect params
+        let mut params: HashMap<String, String> = Vec::new();
         // Copy route from request object
         let route: String = self.get_route();
-        // Split between path and query string
-        let mut split: Vec<&str> = route.split("/").collect();
-        // Take the right side and separate queries.
-        let queries: Vec<&str> = split.pop().unwrap().split("?").collect();
-
-        self.params_from_route(queries.clone()).args_from_route(queries.clone().as_mut())
-    }
-
-
-    // Finds params contained in route and includes them in the body
-    // of the request object in the order found. Assumes that all params
-    // will be located after the last hyphen of the path and end with a ?
-    pub fn params_from_route(mut self, queries: Vec<&str>) -> Request {
-        let mut params: Vec<String> = Vec::new();
-
-        for i in queries {
-            // Push anything that isn't an argument in the query string
-            if i.contains("=") != true && i.is_empty() != true {
-                params.push(i.to_string());
-            }
-        }
-        self.params = params;
-        self
-    }
-
-    // Pulls args from the route of the request object. Assumes that the first args
-    // will be located after the last ? and all others will be after ampersands
-    pub fn args_from_route(mut self, queries: &mut Vec<&str>) -> Request {
-        //Create new hashmap to collect args
-        let mut args: Vec<String> = Vec::new();
-        // Separate arguments from params and separate
-        let arg_section: Vec<&str> = queries.pop().unwrap().split("&").collect();
+        // Split between route and params and collect params
+        let mut queries: Vec<&str> = route.split("?").collect().pop().unwrap();
+        // Separate params
+        let param_section: Vec<&str> = queries.pop().unwrap().split("&").collect();
 
         // Find and split argument terms
-        for i in arg_section {
+        for i in param_section {
                 if i.contains("=") == true {
                 let mut tuple: Vec<&str> = i.split("=").collect();
-                args.push(tuple[1].to_string());
+                params.insert(tuple[0].to_string(), tuple[1].to_string());
             }
         }
 
-        self.args = args;
+        self.params = params;
         self
     }
 
@@ -177,7 +152,7 @@ impl Request {
                                   .with_method(found_method)
                                   .with_route(found_route)
                                   .with_headers(found_headers)
-                                  .parse_query_string();
+                                  .params_from_route();
         new_request
     }
 
@@ -200,10 +175,6 @@ impl Request {
 
     pub fn get_params(&self) -> Vec<String> {
         self.params.clone()
-    }
-
-    pub fn get_args(&self) -> Vec<String> {
-        self.args.clone()
     }
 
     // Request setters
@@ -229,23 +200,15 @@ impl Request {
         self
     }
 
-    pub fn with_params(mut self, req_params: Vec<String>) -> Request {
+    // Arg copied over as new header hashmap
+    pub fn with_params(mut self, req_params: HashMap<String, String>) -> Request {
         self.params = req_params;
         self
     }
 
-    pub fn with_param(mut self, req_param: String) -> Request {
-        self.params.push(req_param);
-        self
-    }
-
-    pub fn with_args(mut self, req_args: Vec<String>) -> Request {
-        self.args = req_args;
-        self
-    }
-
-    pub fn with_arg(mut self, req_arg: String) -> Request {
-        self.args.push(req_arg);
+    // Adds to existing hash map
+    pub fn with_param(mut self, req_param: (String, String)) -> Request {
+        self.param.insert(req_header.0, req_header.1);
         self
     }
 }
