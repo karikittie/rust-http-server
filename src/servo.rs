@@ -28,6 +28,21 @@ pub type CallBack = fn(Request, &Configuration) -> Response;
 /// that will be attached to the Request given to the CallBack.
 pub type Router = fn(&Request, &Routes) -> (Vec<String>, CallBack);
 
+#[derive(Clone)]
+pub enum HttpProtocol {
+    Http,
+    Https,
+}
+
+impl HttpProtocol {
+    pub fn stringify(&self) -> String {
+        match self {
+            &HttpProtocol::Http => String::from("http"),
+            &HttpProtocol::Https => String::from("https"),
+        }
+    }
+}
+
 pub struct Servo {
     configuration : Configuration
 }
@@ -77,6 +92,8 @@ pub struct Server {
     port : String,
     static_dir : String,
     html_dir : String,
+    domain : String,
+    protocol : HttpProtocol,
     router : Router,
 }
 
@@ -85,8 +102,10 @@ impl Server {
         Server {
             host : String::from("127.0.0.1"),
             port : String::from("8000"),
+            domain : String::from("127.0.0.1"),
             static_dir : String::from("static/"),
             html_dir : String::from("templates/"),
+            protocol : HttpProtocol::Http,
             router : default_router
         }
     }
@@ -101,12 +120,20 @@ impl Server {
         self.port.clone()
     }
 
+    pub fn get_domain(&self) -> String {
+        self.domain.clone()
+    }
+
     pub fn get_static_directory(&self) -> String {
         self.static_dir.clone()
     }
 
     pub fn get_html_directory(&self) -> String {
         self.html_dir.clone()
+    }
+
+    pub fn get_protocol(&self) -> HttpProtocol {
+        self.protocol.clone()
     }
 
     pub fn with_host(mut self, host: &str) -> Server {
@@ -116,6 +143,11 @@ impl Server {
 
     pub fn with_port(mut self, port: &str) -> Server {
         self.port = String::from(port);
+        self
+    }
+
+    pub fn with_domain(mut self, domain: &str) -> Server {
+        self.domain = String::from(domain);
         self
     }
 
@@ -139,13 +171,13 @@ impl Server {
     }
 
     pub fn clone(&self) -> Server {
-        Server {
-            host: self.host.clone(),
-            port: self.port.clone(),
-            static_dir: self.static_dir.clone(),
-            html_dir: self.html_dir.clone(),
-            router: self.router
-        }
+        Server::new()
+            .with_host(&self.host)
+            .with_port(&self.port)
+            .with_domain(&self.domain)
+            .with_static_dir(&self.static_dir)
+            .with_html_dir(&self.html_dir)
+            .with_router(self.router.clone())
     }
 }
 
@@ -160,6 +192,7 @@ impl Routes {
     pub fn new() -> Routes {
         let mut map: BTreeMap<String, CallBack> = BTreeMap::new();
         map.insert(String::from("GET /"), default_home);
+        map.insert(String::from("GET /static/{}"), static_route);
         Routes {
             route_map: map
         }
@@ -218,6 +251,13 @@ impl Configuration {
     pub fn with_routes(mut self, routes: Routes) -> Configuration {
         self.routes = routes;
         self
+    }
+
+    pub fn get_static_uri(&self) -> String {
+        format!("{}://{}:{}/static/", 
+            self.server.get_protocol().stringify(), 
+            self.server.get_domain(), 
+            self.server.get_port())
     }
 
     pub fn clone(&self) -> Configuration {
@@ -410,7 +450,7 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
 // TODO: We also might want to push error handling out here. I'd like to use some actual logging here instead of printing to console.
 /// Takes a u8 array and the TCP stream and writes those bytes to the stream.
 /// Prints 'replied' on successful write and an error message on failure.
-fn write_output_buffer(mut stream : TcpStream, to_write : &[u8]) {
+fn write_output_buffer(mut stream : &TcpStream, to_write : &[u8]) {
     match stream.write(to_write) {
         Ok(_) => (),
         Err(e) => eprintln!("Failed to reply to request: {}", e),
@@ -433,8 +473,8 @@ fn handle_request(stream : TcpStream, configs: &Configuration) {
             },
         });
     let request_obj = http::Request::from(&request_str);
-    let mut response = route_request(request_obj, configs);
+    let response = route_request(request_obj, configs);
     let response_bytes = response.byteify();
-    write_output_buffer(stream, &response_bytes);
+    write_output_buffer(&stream, &response_bytes);
 }
 

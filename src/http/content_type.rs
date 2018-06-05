@@ -11,6 +11,7 @@ pub enum ContentType {
     ImagePng,
     ImageJpg,
     ImageBmp,
+    ImageGif,
     ApplicationJson,
     ApplicationXml,
 }
@@ -28,6 +29,7 @@ impl ContentType {
             &ContentType::ImageJpg => String::from("image/jpg"),
             &ContentType::ImagePng => String::from("image/png"),
             &ContentType::ImageBmp => String::from("image/bmp"),
+            &ContentType::ImageGif => String::from("image/gif"),
             &ContentType::ApplicationJson => String::from("application/json"),
             &ContentType::ApplicationXml => String::from("application/xml"),
         }
@@ -59,6 +61,7 @@ fn get_file_type_from_extension(ext: &str) -> ContentType {
         "jpg" => ContentType::ImageJpg,
         "jpeg" => ContentType::ImageJpg,
         "png" => ContentType::ImagePng,
+        "gif" => ContentType::ImageGif,
         "bmp" => ContentType::ImageBmp,
         "css" => ContentType::TextCss,
         "js" => ContentType::TextJs,

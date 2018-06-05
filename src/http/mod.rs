@@ -43,40 +43,34 @@ impl PartialEq for Response {
 
 /// Builds a Response struct from a given body and content type with a status = 404
 pub fn not_found<'a>(body: String, content_type: ContentType) -> Response {
-    return Response {status : 404,
-                    content_type : content_type,
-                    body : Vec::from(body.as_bytes()),
-                    headers : None};
+    Response::new()
+        .with_status(404)
+        .with_content_type(content_type)
+        .with_body(Vec::from(body.as_bytes()))
 }
 
 /// Builds a Response struct from a given body and content type with a status = 200
 pub fn ok<'a>(body: String, content_type: ContentType) -> Response {
-    Response {
-        status : 200,
-        content_type : content_type,
-        body : Vec::from(body.as_bytes()),
-        headers : None
-    }
+    Response::new()
+        .with_status(200)
+        .with_content_type(content_type)
+        .with_body(Vec::from(body.as_bytes()))
 }
 
 /// Builds a Response struct from a given body (of Vec<u8>) and content type with a status = 200
 pub fn ok_file<'a>(body: Vec<u8>, content_type: ContentType) -> Response {
-    Response {
-        status : 200,
-        content_type : content_type,
-        body : body,
-        headers : None
-    }
+    Response::new()
+        .with_status(200)
+        .with_content_type(content_type)
+        .with_body(body)
 }
 
 /// Builds a Response struct from a given body and content type with a status = 505
 pub fn server_error<'a>(body: String, content_type: ContentType) -> Response {
-    Response {
-        status : 505,
-        content_type : content_type,
-        body : Vec::from(body.as_bytes()),
-        headers : None
-    }
+    Response::new()
+        .with_status(505)
+        .with_content_type(content_type)
+        .with_body(Vec::from(body.as_bytes()))
 }
 
 /*
@@ -179,29 +173,32 @@ can be converted to a byte-stream and written back to the user.
 impl Response {
         // Create a new response struct with default values
         pub fn new() -> Response {
-            let response = Response { status: 0_i32,
-    				                  content_type: ContentType::TextHtml,
-    				                  body: Vec::new(),
-    				                  headers: None
-    	    };
-    	    response
+            Response { 
+                status: 0_i32,
+                content_type: ContentType::TextHtml,
+                body: Vec::new(),
+                headers: None
+    	    }
         }
 
-        fn stringify(&self) -> String {
-            let mut res = String::from(format!("HTTP/1.1 {}\r\ncontent-type: {}\r\n",
-                                                self.status,
-                                                self.content_type.stringify()));
+        fn stringify(&mut self) -> String {
+            let status = self.status.clone();
+            let content_type = self.content_type.clone();
+            let body_size = self.body.len();
+            self.add_header("Content-Type", &content_type.stringify());
+            self.add_header("Content-Length", &body_size.to_string());
+            let mut res = String::from(format!("HTTP/1.1 {}\n\r", status));
             if self.headers.is_some() {
                 let headers = self.headers.as_ref().unwrap();
-                for key in headers.keys() {
-                    res = res + &format!("{}: {}", key, headers[key]);
+                for (key, value) in headers {
+                    res = res + &format!("{}: {}\n\r", key, value);
                 }
             }
             res = res + "\r\n";
             res
         }
 
-        pub fn byteify(&mut self) -> Vec<u8> {
+        pub fn byteify(mut self) -> Vec<u8> {
             let part1 = self.stringify();
             let mut result: Vec<u8> = Vec::from(part1.as_bytes());
             result.append(&mut self.body);
@@ -242,24 +239,28 @@ impl Response {
         }
 
         // Sets headers to arg
-        pub fn with_headers(mut self, res_headers: Option<HashMap<String, String>>) -> Response {
-            self.headers = res_headers;
+        pub fn with_headers(mut self, res_headers: HashMap<String, String>) -> Response {
+            self.headers = Option::from(res_headers);
             self
         }
 
         // Adds to the current header hashmap or creates a new one if necessary
-        pub fn with_header(mut self, res_header: (String, String)) -> Response {
-    	        match self.headers {
-                    Some(ref mut headers) => {
-                        headers.insert(res_header.0, res_header.1);
-                    },
-                    None => {
-    		            let mut headers = HashMap::new();
-    		            headers.insert(res_header.0, res_header.1);
-    		            self.headers = Option::from(headers);
-                    }
+        pub fn with_header(mut self, key: &str, value: &str) -> Response {
+            self.add_header(key, value);
+            self
+        }
+
+        pub fn add_header(&mut self, key: &str, value: &str) {
+            match self.headers {
+                Some(ref mut headers) => {
+                    headers.insert(String::from(key), String::from(value));
+                },
+                None => {
+                    let mut headers = HashMap::new();
+                    headers.insert(String::from(key), String::from(value));
+                    self.headers = Option::from(headers);
                 }
-                self
+            }
         }
 }
 
