@@ -28,6 +28,10 @@ pub type CallBack = fn(Request, &Configuration) -> Response;
 /// that will be attached to the Request given to the CallBack.
 pub type Router = fn(&Request, &Routes) -> (Vec<String>, CallBack);
 
+/// Defines which HTTP protocol to use. Valid values are 
+/// `HttpProtocol::Http` and `HttpProtocol::Https`. HTTPS 
+/// is not currently supported but is included here for future 
+/// development.
 #[derive(Clone)]
 pub enum HttpProtocol {
     Http,
@@ -35,6 +39,8 @@ pub enum HttpProtocol {
 }
 
 impl HttpProtocol {
+    /// Transforms the HTTP protocol enum into a String for Servo 
+    /// to use when building fully-qualified addresses.
     pub fn stringify(&self) -> String {
         match self {
             &HttpProtocol::Http => String::from("http"),
@@ -47,24 +53,23 @@ pub struct Servo {
     configuration : Configuration
 }
 
-// TODO: we need to add configs for the host and port it listens on.
-//     we should also think about limiting the number of threads that will
-//     be created to protect against DOS attacks.
-/// Starts the server on port 8000 listening to localhost.
-/// Then a stream is created and a new thread is spun up for every request.
-///
 impl Servo {
+    /// Constructs a new server with default configuration values.
     pub fn new() -> Servo {
         Servo {
             configuration : Configuration::new()
         }
     }
 
+    /// Allows the user to specify a custom configuration for Servo.
     pub fn with_configuration(mut self, configuration: Configuration) -> Servo {
         self.configuration = configuration;
         self
     }
 
+    /// Starts the server listening on the configured host and port. 
+    /// The default is `127.0.0.1:8000`. Spins up a new thread to handle 
+    /// each request.
     pub fn run(&self) {
         let host = self.configuration.server.get_host();
         let port = self.configuration.server.get_port();
@@ -86,7 +91,10 @@ impl Servo {
     }
 }
 
-// All server configs should exist here. Each with a corresponding constant key
+/// Holds all configurations for the server itself. Currently 
+/// supports configuration of host, port, static file directory, html file 
+/// directory, base server domain, HTTP protocol and allows the user 
+/// to inject their own routing system into Servo.
 pub struct Server {
     host : String,
     port : String,
@@ -98,6 +106,14 @@ pub struct Server {
 }
 
 impl Server {
+    /// Creates a new Server configuration struct with default values of:
+    /// host: 127.0.0.1
+    /// port: 8000
+    /// domain: localhost
+    /// static directory: static/
+    /// html directory: templates/
+    /// HTTP protocol: HTTP
+    /// routing method: Servo internal routing
     pub fn new() -> Server {
         Server {
             host : String::from("127.0.0.1"),
@@ -120,6 +136,7 @@ impl Server {
         self.port.clone()
     }
 
+    /// Returns the domain without http protocol specifier (my_domain.com)
     pub fn get_domain(&self) -> String {
         self.domain.clone()
     }
@@ -189,6 +206,11 @@ pub struct Routes {
 }
 
 impl Routes {
+    /// Creates a new route map with two default routes:
+    /// `GET /` and `GET /static/{}`. The `GET /` method should 
+    /// be overwritten with your own, custom homepage. The `GET /static/{}` 
+    /// should NOT be overwritten as this can cause Servo to quit serving static 
+    /// files correctly.
     pub fn new() -> Routes {
         let mut map: BTreeMap<String, CallBack> = BTreeMap::new();
         map.insert(String::from("GET /"), default_home);
@@ -198,21 +220,58 @@ impl Routes {
         }
     }
 
+    /// Adds route/callback function pair to the current route map. Used in the 
+    /// builder pattern.
     pub fn with_route(mut self, route: &str, callback: CallBack) -> Routes {
         self.route_map.insert(String::from(route), callback);
         self
     }
 
+    /// Returns true if their is an exact match on the given route in the 
+    /// route map. Does not match using configured wildcards.
     pub fn contains_route(&self, route: &str) -> bool {
         self.route_map.contains_key(route)
     }
 
+    /// Gets the callback function associated with a given route. 
+    /// Returns an optional reference. Will return None if not found.
     pub fn get_route(&self, route: &str) -> Option<&CallBack> {
         self.route_map.get(route)
     }
 
+    /// Adds a route/callback function pair to the current route map, in place.
     pub fn add_route(&mut self, key: &str, callback: CallBack) {
         self.route_map.insert(String::from(key), callback);
+    }
+
+    /// Adds a 'GET' route and callback function pair to the current route map, 
+    /// in place. Should be used `routes.add_get("/home", my_home);`
+    pub fn add_get(&mut self, key: &str, callback: CallBack) {
+        self.route_map.insert(format!("GET {}", key), callback);
+    }
+
+    /// Adds a 'POST' route and callback function pair to the current route map, 
+    /// in place. Should be used `routes.add_post("/home", my_home);`
+    pub fn add_post(&mut self, key: &str, callback: CallBack) {
+        self.route_map.insert(format!("POST {}", key), callback);
+    }
+
+    /// Adds a 'DELETE' route and callback function pair to the current route map, 
+    /// in place. Should be used `routes.add_delete("/home", my_home);`
+    pub fn add_delete(&mut self, key: &str, callback: CallBack) {
+        self.route_map.insert(format!("DELETE {}", key), callback);
+    }
+
+    /// Adds a 'PATCH' route and callback function pair to the current route map, 
+    /// in place. Should be used `routes.add_patch("/home", my_home);`
+    pub fn add_patch(&mut self, key: &str, callback: CallBack) {
+        self.route_map.insert(format!("PATCH {}", key), callback);
+    }
+
+    /// Adds a 'PUT' route and callback function pair to the current route map, 
+    /// in place. Should be used `routes.add_put("/home", my_home);`
+    pub fn add_put(&mut self, key: &str, callback: CallBack) {
+        self.route_map.insert(format!("PUT {}", key), callback);
     }
 
     pub fn clone(&self) -> Routes {
@@ -222,7 +281,10 @@ impl Routes {
     }
 }
 
-/// Holds server configuration information.
+/// Holds server configuration information via the Server and 
+/// Routes structs where Server has string configuration variables and 
+/// Routes holds the callback functions associated with any configured 
+/// routes.
 pub struct Configuration {
     pub server: Server,
     pub routes: Routes,
@@ -253,6 +315,7 @@ impl Configuration {
         self
     }
 
+    /// Returns a String with the fully-qualified static file URI.
     pub fn get_static_uri(&self) -> String {
         format!("{}://{}:{}/static/", 
             self.server.get_protocol().stringify(), 
@@ -379,6 +442,7 @@ fn default_router(request: &Request, routes: &Routes) -> (Vec<String>, CallBack)
     }
 }
 
+// Used for testing only
 fn get_request(method: &str, route: &str) -> Request {
     Request::new()
         .with_method(String::from(method))
@@ -423,12 +487,13 @@ fn test_route_wildcard_complex() {
     assert_eq!(args, vec![String::from("blah"), String::from("whatever"), String::from("113")]);
 }
 
+/// Takes a Request along with the current Servo instances' configuration and 
+/// returns a Response based on how the route map is currently setup.
 pub fn route_request(request: Request, configs: &Configuration) -> Response {
     let (args, callback) = configs.server.route_request(&request, &configs.routes);
     callback(request.with_args(args), configs)
 }
 
-// TODO: we might want to return a Result<Vec<u8>> to push the error handling downstream
 /// Takes a TCP buffer, reads whatever is in it and outputs
 /// the contents to a u8 Vector. If there is an error reading
 /// the buffer, an error is printed to console and an empty
@@ -447,7 +512,6 @@ fn read_input_buffer(mut stream : &TcpStream) -> Vec<u8> {
     }
 }
 
-// TODO: We also might want to push error handling out here. I'd like to use some actual logging here instead of printing to console.
 /// Takes a u8 array and the TCP stream and writes those bytes to the stream.
 /// Prints 'replied' on successful write and an error message on failure.
 fn write_output_buffer(mut stream : &TcpStream, to_write : &[u8]) {
@@ -457,7 +521,6 @@ fn write_output_buffer(mut stream : &TcpStream, to_write : &[u8]) {
     }
 }
 
-// TODO: http_requests should be transformed into a module.
 /// Reads from the input buffer and transforms that Vec<u8> into a String.
 /// Then it transforms that String into a Request object and asks for the
 /// Response String from the http_requests file functions and writes that output
@@ -477,4 +540,3 @@ fn handle_request(stream : TcpStream, configs: &Configuration) {
     let response_bytes = response.byteify();
     write_output_buffer(&stream, &response_bytes);
 }
-

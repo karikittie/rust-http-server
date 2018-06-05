@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::ffi::OsStr;
 
+/// Used to construct Servo's responses.
 #[derive(Copy, Clone, Debug, Eq)]
 pub enum ContentType {
     TextHtml,
@@ -54,8 +55,7 @@ pub fn get_content_type(filename: &String) -> ContentType {
     }
 }
 
-// This function has all the mappings to the supported content types.
-// New content types need to be added here as well to be supported.
+/// Maps a file extension to its associated ContentType enum.
 fn get_file_type_from_extension(ext: &str) -> ContentType {
     match ext {
         "jpg" => ContentType::ImageJpg,

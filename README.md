@@ -25,32 +25,43 @@ servo::http::ok_file(body: Vec<u8>, content_type: servo::http::content_type::CON
 servo::http::not_found(body: String, content_type: servo::http::content_type::CONTENT_TYPE) // Status = 404
 servo::http::server_error(body: String, content_type: servo::http::content_type::CONTENT_TYPE) // Status = 505
 ```
+You may also construct a Response from scratch using the builder pattern like so:
+```
+Response::new()
+    .with_status(200)
+    .with_content_type(ContentType::TextHtml)
+    .with_body(Vec::from(body_string.as_bytes()));
+```
 There is also a method called `get_html(&str, &Configuration) -> String` which will pull from the HTML directory defined in the configs. 
 The default directory for these is `templates/`. This can be used with the other functions to return HTML like so:<br>
 `ok(get_html("my_file.html", configs), CONTENT_TYPE::TEXT_HTML))`
 
 ## File Serving
-Static files can be served in a couple of ways. Firstly, you can setup a directory where your static files will be served from. This is relative to your root directory and is set to `static/` by default. They are served from this directory to the URL `/static/` by default. There isn't currently a way to define a different static files URL but the directory may be set by calling `servo::set_static_dir(new_directory)`. You are able to overwrite this route by setting a new route using
+Static files can be served in a couple of ways. Firstly, you can setup a directory where your static files will be served from. This is relative to your root directory and is set to `static/` by default. They are served from this directory to the URL `/static/` by default. There isn't currently a way to define a different static files URL but the directory may be set by calling `my_configs.server.set_static_dir(new_directory)`. You are able to overwrite this route by setting a new route using
 <br>
 `my_routes.add_route("GET /static/{}", some other callback function))`<br>
 You should be cautious not to do this since it will break static file serving.<br>
 You can also setup a directory that Servo will pull HTML files from using the function<br>
 `servo::get_html(&str, &Configuration) -> String`<br>
-The function to set this option is `my_server.with_html_dir(new directory)`.
+The function to set this option is `my_configs.server.with_html_dir(new directory)`.
 
 ## Configuration Object
 Creating a new instance of a Configuration struct via `servo::Configuration::new()` gives you a struct with your server configurations (including all the defaults already filled in)! Here's the structure:
 ```
 Configuration {
     Server {
-        host,
-        port,
-        static directory,
-        html directory,
-        routing function
+        host: "127.0.0.1",
+        port: "8000",
+        domain: "localhost",
+        static directory: "static/",
+        html directory: "templates/",
+        routing function: Servo's default routing
     },
     Routes {
-        route map
+        route map {
+            "GET /" => Servo's default homepage,
+            "GET /static/{}" => Servo's static file serving
+        }
     }
 }
 ```
