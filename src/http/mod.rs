@@ -88,8 +88,63 @@ impl Request {
             method : String::from("GET"),
             route : String::from(""),
             headers : HashMap::new(),
-            args : vec![],
+            args : Vec::new(),
         }
+    }
+
+    // The following three methods are helper functions used in the "from" method to
+    // extract the params and args from the route of a request.
+    pub fn parse_query_string(mut self) -> Request {
+        // Copy route from request object
+        let route: String = self.get_route();
+        // Split between path and query string
+        let mut split: Vec<&str> = route.split("/").collect();
+        // Check if the wildcard is present at the end of the string.
+        // Take the right side and separate queries.
+        let end = split[(split.len()-1) as usize];
+        if end == "{}".to_string() {
+            split.pop();
+        }
+        let mut queries: Vec<&str> = split.pop().unwrap().split("?").collect();
+
+        self.params_from_route(queries.clone()).args_from_route(queries.clone().as_mut())
+    }
+
+
+    // Finds params contained in route and includes them in the body
+    // of the request object in the order found. Assumes that all params
+    // will be located after the last hyphen of the path and end with a ?
+    pub fn params_from_route(mut self, queries: Vec<&str>) -> Request {
+        let mut params: Vec<String> = Vec::new();
+
+        for i in queries {
+            // Push anything that isn't an argument in the query string
+            if i.contains("=") != true && i.is_empty() != true {
+                params.push(i.to_string());
+            }
+        }
+        self.params = params;
+        self
+    }
+
+    // Pulls args from the route of the request object. Assumes that the first args
+    // will be located after the last ? and all others will be after ampersands
+    pub fn args_from_route(mut self, queries: &mut Vec<&str>) -> Request {
+        //Create new hashmap to collect args
+        let mut args: HashMap<String, String> = HashMap::new();
+        // Separate arguments from params and separate
+        let mut arg_section: Vec<&str> = queries.pop().unwrap().split("&").collect();
+
+        // Find and split argument terms
+        for i in arg_section {
+                if i.contains("=") == true {
+                let mut tuple: Vec<&str> = i.split("=").collect();
+                args.insert(tuple[0].to_string(), tuple[1].to_string());
+            }
+        }
+
+        self.args = args;
+        self
     }
 
     /// Creates a Request object from a HTTP request.
@@ -119,10 +174,11 @@ impl Request {
             }
             i += 1;
         }
-        let new_request = Request {method : found_method, 
-                                   route : found_route,
-                                   headers : found_headers,
-                                   args : vec![]};
+        let new_request = Request::new()
+                                  .with_method(found_method)
+                                  .with_route(found_route)
+                                  .with_header(found_headers)
+                                  .parse_query_string();
         new_request
     }
 
@@ -143,6 +199,14 @@ impl Request {
         self.headers.clone()
     }
 
+    pub fn get_params(&self) -> Vec<String> {
+        self.params.clone()
+    }
+
+    pub fn get_args(&self) -> Vec<String> {
+        self.args.clone()
+    }
+
     // Request setters
     pub fn with_method(mut self, req_method: String) -> Request {
         self.method = req_method;
@@ -151,11 +215,6 @@ impl Request {
 
     pub fn with_route(mut self, res_route: String) -> Request {
         self.route = res_route;
-        self
-    }
-
-    pub fn with_args(mut self, args: Vec<String>) -> Request {
-        self.args = args;
         self
     }
 
@@ -170,6 +229,26 @@ impl Request {
         self.headers.insert(req_header.0, req_header.1);
         self
     }
+
+    pub fn with_params(mut self, req_params: Vec<String>) -> Request {
+        self.params = req_params;
+        self
+    }
+
+    pub fn with_param(mut self, req_param: String) -> Request {
+        self.params.push(req_param);
+        self
+    }
+
+    pub fn with_args(mut self, req_args: Vec<String>) -> Request {
+        self.args = req_args;
+        self
+    }
+
+    pub fn with_arg(mut self, req_arg: String) -> Request {
+        self.args.push(req_arg);
+        self
+    }
 }
 
 /*
@@ -179,12 +258,11 @@ can be converted to a byte-stream and written back to the user.
 impl Response {
         // Create a new response struct with default values
         pub fn new() -> Response {
-            let response = Response { status: 0_i32,
-    				                  content_type: ContentType::TextHtml,
-    				                  body: Vec::new(),
-    				                  headers: None
-    	    };
-    	    response
+            Response { status: 0_i32,
+    				   content_type: ContentType::TextHtml,
+    				   body: Vec::new(),
+    				   headers: None
+    	    }
         }
 
         fn stringify(&self) -> String {
