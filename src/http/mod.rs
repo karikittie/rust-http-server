@@ -9,8 +9,8 @@ pub struct Request {
     method : String,
     route : String,
     headers : HashMap<String, String>,
-    // params : Vec<String>,
-    params : HashMap<String, String>,
+    url_args : Vec<String>,
+    query_params : HashMap<String, String>,
 }
 
 // Server response
@@ -30,8 +30,8 @@ impl PartialEq for Request {
         self.method == other.method
         && self.route == other.route
         && self.headers == other.headers
-        && self.params == other.params
-        // && self.args == other.args
+        && self.url_args == other.url_args
+        && self.query_params == other.query_params
     }
 }
 
@@ -92,14 +92,14 @@ impl Request {
             method : String::from("GET"),
             route : String::from(""),
             headers : HashMap::new(),
-            // params : Vec::new(),
-            params : HashMap::new(),
+            url_args : Vec::new(),
+            query_params : HashMap::new(),
         }
     }
 
     // Pulls params from the route of the request object. Assumes that the first params
     // will be located after the last ? and all others will be after ampersands
-    pub fn params_from_route(mut self) -> Request {
+    pub fn query_params_from_route(mut self) -> Request {
         //Create new hashmap to collect params
         let mut params: HashMap<String, String> = Vec::new();
         // Copy route from request object
@@ -117,7 +117,7 @@ impl Request {
             }
         }
 
-        self.params = params;
+        self.query_params = params;
         self
     }
 
@@ -152,7 +152,7 @@ impl Request {
                                   .with_method(found_method)
                                   .with_route(found_route)
                                   .with_headers(found_headers)
-                                  .params_from_route();
+                                  .query_params_from_route();
         new_request
     }
 
@@ -173,8 +173,12 @@ impl Request {
         self.headers.clone()
     }
 
-    pub fn get_params(&self) -> Vec<String> {
-        self.params.clone()
+    pub fn get_url_args(&self) -> Vec<String> {
+        self.url_args.clone()
+    }
+
+    pub fn get_query_params(&self) -> HashMap<String, String> {
+        self.query_params.clone()
     }
 
     // Request setters
@@ -200,15 +204,24 @@ impl Request {
         self
     }
 
-    // Arg copied over as new header hashmap
-    pub fn with_params(mut self, req_params: HashMap<String, String>) -> Request {
-        self.params = req_params;
+    // Follows same pattern as the setters for the headers
+    pub fn with_url_args(mut self, req_args: Vec<String>) -> Request {
+        self.url_args = req_args;
         self
     }
 
-    // Adds to existing hash map
-    pub fn with_param(mut self, req_param: (String, String)) -> Request {
-        self.param.insert(req_header.0, req_header.1);
+    pub fn with_url_arg(mut self, req_param: String) -> Request {
+        self.url_args.push(req_param);
+        self
+    }
+
+    pub fn with_query_params(mut self, req_params: HashMap<String, String>) -> Request {
+        self.query_params = req_params;
+        self
+    }
+
+    pub fn with_query_param(mut self, req_param: (String, String)) -> Request {
+        self.query_params.insert(req_param.0, req_param.1);
         self
     }
 }
