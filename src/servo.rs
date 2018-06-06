@@ -385,7 +385,7 @@ fn test_route_wildcard_complex() {
 
 pub fn route_request(request: Request, configs: &Configuration) -> Response {
     let (args, callback) = configs.server.route_request(&request, &configs.routes);
-    callback(request.with_url_args(args), configs)
+    callback(request.with_url_args(args).query_params_from_route(), configs)
 }
 
 // TODO: we might want to return a Result<Vec<u8>> to push the error handling downstream
