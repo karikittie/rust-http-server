@@ -100,19 +100,18 @@ impl Request {
 
     // Pulls params from the route of the request object. Assumes that the first params
     // will be located after the last ? and all others will be after ampersands
+    // Algorithm:
+    // Create new hashmap to collect params
+    // Split between route and params
+    // Separate params terms
+    // Iterate & push param pairs to hashmap
     pub fn query_params_from_route(mut self) -> Request {
-        //Create new hashmap to collect params
         let mut params: HashMap<String, String> = HashMap::new();
-        // Copy route from request object
         let route: String = self.get_route();
-        // Split between route and params
         let mut split: Vec<&str> = route.split("?").collect();
-        // Collect only query params
         let queries: &str = split.pop().unwrap();
-        // Separate params
         let param_section: Vec<&str> = queries.split("&").collect();
 
-        // Find and split argument terms
         for i in param_section {
                 if i.contains("=") == true {
                 let mut tuple: Vec<&str> = i.split("=").collect();
