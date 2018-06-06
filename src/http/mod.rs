@@ -9,8 +9,8 @@ pub struct Request {
     method : String,
     route : String,
     headers : HashMap<String, String>,
-    url_args : Vec<String>,
-    query_params : HashMap<String, String>,
+    pub url_args : Vec<String>,
+    pub query_params : HashMap<String, String>,
 }
 
 // Server response
@@ -101,13 +101,15 @@ impl Request {
     // will be located after the last ? and all others will be after ampersands
     pub fn query_params_from_route(mut self) -> Request {
         //Create new hashmap to collect params
-        let mut params: HashMap<String, String> = Vec::new();
+        let mut params: HashMap<String, String> = HashMap::new();
         // Copy route from request object
         let route: String = self.get_route();
-        // Split between route and params and collect params
-        let mut queries: Vec<&str> = route.split("?").collect().pop().unwrap();
+        // Split between route and params
+        let mut split: Vec<&str> = route.split("?").collect();
+        // Collect only query params
+        let queries: &str = split.pop().unwrap();
         // Separate params
-        let param_section: Vec<&str> = queries.pop().unwrap().split("&").collect();
+        let param_section: Vec<&str> = queries.split("&").collect();
 
         // Find and split argument terms
         for i in param_section {
