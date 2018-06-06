@@ -12,6 +12,7 @@ use self::content_type::ContentType;
 pub struct Request {
     method : String,
     route : String,
+    body : String,
     headers : HashMap<String, String>,
     url_args : Vec<String>,
     query_params : HashMap<String, String>,
@@ -38,6 +39,7 @@ impl PartialEq for Request {
     fn eq(&self, other: &Request) -> bool {
         self.method == other.method
         && self.route == other.route
+        && self.body == self.body
         && self.headers == other.headers
         && self.url_args == other.url_args
         && self.query_params == other.query_params
@@ -92,6 +94,7 @@ impl Request {
         Request {
             method : String::from("GET"),
             route : String::from(""),
+            body : String::from(""),
             headers : HashMap::new(),
             url_args : Vec::new(),
             query_params : HashMap::new(),
@@ -173,6 +176,10 @@ impl Request {
         route
     }
 
+    pub fn get_body(&self) -> String {
+        self.body.clone()
+    }
+
     pub fn get_headers(&self) -> HashMap<String, String> {
         self.headers.clone()
     }
@@ -187,48 +194,53 @@ impl Request {
     }
 
     // Request setters
-    pub fn with_method(mut self, req_method: String) -> Request {
-        self.method = req_method;
+    pub fn with_method(mut self, method: String) -> Request {
+        self.method = method;
         self
     }
 
-    pub fn with_route(mut self, res_route: String) -> Request {
-        self.route = res_route;
+    pub fn with_route(mut self, route: String) -> Request {
+        self.route = route;
+        self
+    }
+
+    pub fn with_body(mut self, body: String) -> Request {
+        self.body = body;
         self
     }
 
     /// Replaces current headers with a HashMap of key/value pairs. Used
     /// in the builder pattern.
     // Arg copied over as new header hashmap
-    pub fn with_headers(mut self, req_headers: HashMap<String, String>) -> Request {
-        self.headers = req_headers;
+    pub fn with_headers(mut self, headers: HashMap<String, String>) -> Request {
+        self.headers = headers;
         self
     }
 
     /// Adds a key/value pair to headers. Used in the builder pattern.
-    pub fn with_header(mut self, req_header: (String, String)) -> Request {
-        self.headers.insert(req_header.0, req_header.1);
+    pub fn with_header(mut self, header: (String, String)) -> Request {
+        self.headers.insert(header.0, header.1);
         self
     }
 
     // Follows same pattern as the setters for the headers
-    pub fn with_url_args(mut self, req_args: Vec<String>) -> Request {
-        self.url_args = req_args;
+    pub fn with_url_args(mut self, url_args: Vec<String>) -> Request {
+        self.url_args = url_args;
         self
     }
 
-    pub fn with_url_arg(mut self, req_param: String) -> Request {
-        self.url_args.push(req_param);
+    pub fn with_url_arg(mut self, url_arg: String) -> Request {
+        self.url_args.push(url_arg);
         self
     }
 
-    pub fn with_query_params(mut self, req_params: HashMap<String, String>) -> Request {
-        self.query_params = req_params;
+    pub fn with_query_params(mut self, query_params: HashMap<String, String>) -> Request {
+        self.query_params = query_params;
         self
     }
 
-    pub fn with_query_param(mut self, req_param: (String, String)) -> Request {
-        self.query_params.insert(req_param.0, req_param.1);
+    pub fn with_query_param(mut self, query_param: (String, String)) -> Request {
+        self.query_params.insert(query_param.0, query_param.1);
         self
     }
 }
