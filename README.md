@@ -78,3 +78,45 @@ You'll notice the Server also allows you to inject your own routing function int
 fn(&Request, &Routes) -> (Vec<String>, CallBack)
 ```
 where the Vec<String> is a list of URL arguments internal to the route and apart from the URL query parameters. This can then be set using `my_server.with_router(my_router)`.
+
+## Sample main.rs
+```
+extern crate servo;
+
+use servo::{Servo, Configuration, Server, Routes};
+use servo::get_html;
+use servo::http::{Request, Response, ok};
+use servo::http::content_type::ContentType;
+
+fn main() {
+    // Redundantly setting to default configs to show how
+    let mut configs = Configuration::new()
+        .with_server_configurations(
+            Server::new()
+                .with_host("127.0.0.1")
+                .with_port("8000")
+                .with_domain("localhost")
+                .with_static_dir("static/")
+                .with_html_dir("templates/")
+        )
+        .with_routes(
+            // These routes are not default
+            Routes::new()
+                .with_route("GET /", my_new_home)
+                .with_route("GET /home", my_new_home)
+        );
+    configs.routes.add_get("/home/{}", wildcard_route);
+    let servo = Servo::new().with_configuration(configs);
+    servo.run();
+}
+
+// This is an example CallBack function
+fn my_new_home(_: Request, configs: &Configuration) -> Response {
+    ok(get_html("index.html", configs), ContentType::TextHtml)
+}
+
+// This is another example CallBack function that serves an image
+fn wildcard_route(_: Request, configs: &Configuration) -> Response {
+    ok(format!("<html><img src=\"{}my_file.jpg\" ></html>", configs.get_static_uri()), ContentType::TextHtml)
+}
+```
