@@ -3,10 +3,10 @@ pub mod content_type;
 use std::collections::HashMap;
 use self::content_type::ContentType;
 
-/// Request struct that contains the elements 
-/// of the request given to Servo. `url_args` contain 
-/// the arguments of any route setup using a wildcard ({}) 
-/// character. `query_params` are for query parameters 
+/// Request struct that contains the elements
+/// of the request given to Servo. `url_args` contain
+/// the arguments of any route setup using a wildcard ({})
+/// character. `query_params` are for query parameters
 /// passed in by the client via `host.com?arg1=val1&arg2=val2`
 #[derive(Eq,Debug)]
 pub struct Request {
@@ -17,8 +17,8 @@ pub struct Request {
     query_params : HashMap<String, String>,
 }
 
-/// Response struct that contains everything 
-/// returned to the client from Servo. Built 
+/// Response struct that contains everything
+/// returned to the client from Servo. Built
 /// using builder pattern:
 /// ```
 /// Response::new()
@@ -48,7 +48,7 @@ impl PartialEq for Request {
 impl PartialEq for Response {
     fn eq(&self, other: &Response) -> bool {
         self.status == other.status
-        && self.content_type == other.content_type
+        // && self.content_type == other.content_type
         && self.body == other.body
         && self.headers == other.headers
     }
@@ -163,7 +163,7 @@ impl Request {
         self.method.clone()
     }
 
-    /// Returns the route including method as it was given in the request 
+    /// Returns the route including method as it was given in the request
     /// to Servo.
     pub fn get_route(&self) -> String {
         let mut route = self.method.clone();
@@ -197,12 +197,7 @@ impl Request {
         self
     }
 
-    pub fn with_args(mut self, args: Vec<String>) -> Request {
-        self.args = args;
-        self
-    }
-
-    /// Replaces current headers with a HashMap of key/value pairs. Used 
+    /// Replaces current headers with a HashMap of key/value pairs. Used
     /// in the builder pattern.
     // Arg copied over as new header hashmap
     pub fn with_headers(mut self, req_headers: HashMap<String, String>) -> Request {
@@ -241,7 +236,7 @@ impl Request {
 impl Response {
     /// Create a new response struct with default values
     pub fn new() -> Response {
-        Response { 
+        Response {
             status: 0_i32,
             content_type: ContentType::TextHtml,
             body: Vec::new(),
@@ -249,7 +244,7 @@ impl Response {
         }
     }
 
-    /// Converts response headers to String. Does not do the same for the body 
+    /// Converts response headers to String. Does not do the same for the body
     /// as that could result in errors depending on what the body is.
     fn stringify(&mut self) -> String {
         let status = self.status.clone();
@@ -307,7 +302,7 @@ impl Response {
         self
     }
 
-    /// Replaces current headers with a HashMap of key/value header pairs. Used 
+    /// Replaces current headers with a HashMap of key/value header pairs. Used
     /// in builder pattern.
     pub fn with_headers(mut self, res_headers: HashMap<String, String>) -> Response {
         self.headers = Option::from(res_headers);
