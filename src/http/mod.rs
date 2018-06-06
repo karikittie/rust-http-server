@@ -9,8 +9,8 @@ pub struct Request {
     method : String,
     route : String,
     headers : HashMap<String, String>,
-    pub url_args : Vec<String>,
-    pub query_params : HashMap<String, String>,
+    url_args : Vec<String>,
+    query_params : HashMap<String, String>,
 }
 
 // Server response
@@ -175,8 +175,9 @@ impl Request {
         self.headers.clone()
     }
 
-    pub fn get_url_args(&self) -> Vec<String> {
-        self.url_args.clone()
+    pub fn get_url_args(&self) -> String {
+        let url_args = self.url_args.clone().join("/");
+        url_args
     }
 
     pub fn get_query_params(&self) -> HashMap<String, String> {

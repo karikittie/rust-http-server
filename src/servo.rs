@@ -232,7 +232,7 @@ impl Configuration {
 /// The default static files directory is `static/`. Static files are served at
 /// `/static/{file path under static directory}`
 fn static_route(request: Request, config: &Configuration) -> Response {
-    let file_to_get = request.url_args.join("/");
+    let file_to_get = request.get_url_args();
     let static_dir = config.server.get_static_directory();
     let filename = format!("{}{}", static_dir, file_to_get);
     let file_to_serve = File::open(&filename);
