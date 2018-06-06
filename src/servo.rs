@@ -1,3 +1,6 @@
+// Copyright (c) 2018 Ollie Murauskas and Karis Sponsler
+// Licensed under MIT open-source license (in source)
+
 #![allow(dead_code)]
 
 pub mod http;
