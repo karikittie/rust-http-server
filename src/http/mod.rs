@@ -20,12 +20,12 @@ pub struct Request {
 /// Response struct that contains everything
 /// returned to the client from Servo. Built
 /// using builder pattern:
-/// ```
-/// Response::new()
+///
+/// servo::http::Response::new()
 ///     .with_status(200)
-///     .with_content_type(ContentType::TextHtml)
+///     .with_content_type(servo::http::content_type::ContentType::TextHtml)
 ///     .with_body(Vec::new());
-/// ```
+///
 #[derive(Eq,Debug)]
 pub struct Response {
     status : i32,
