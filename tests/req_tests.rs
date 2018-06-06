@@ -31,11 +31,11 @@ fn response_eq_test() {
     let original = Response::new().with_status(status)
 				                  .with_content_type(content.clone())
 				                  .with_body(body.clone().to_vec())
-				                  .with_headers(Option::from(map.clone()));
+				                  .with_headers(map.clone());
     let response = Response::new().with_status(status)
 				                  .with_content_type(content)
 				                  .with_body(body.to_vec())
-				                  .with_headers(Option::from(map));
+				                  .with_headers(map);
     assert_eq!(true, original == response)
 }
 
