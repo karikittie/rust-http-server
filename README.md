@@ -15,7 +15,9 @@ This will start a server on `localhost:8000/` that returns a simple message. The
 
 ## Configuring Views
 Views are configured using the method<br>
-`servo::add_route(String, CallBack)`<br>
+`my_configs.routes.add_route(String, CallBack)`<br>
+or<br>
+`Routes::new().with_route(String, CallBack)`<br>
 where:<br>
 `type CallBack = fn(Request, &Configuration) -> Response`<br>
 Views take a servo::http::Request and return a servo::http::Response. There are several helper methods for this:
