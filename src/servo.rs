@@ -23,7 +23,7 @@ pub type CallBack = fn(Request, &Configuration) -> Response;
 /// Function type of the routing function for
 /// Servo. This allows anybody to inject their own
 /// routing algorithm that will override Servo's
-/// default routing. It takes a 
+/// default routing. It takes a
 /// Request route and returns a vector of URL arguments
 /// that will be attached to the Request given to the CallBack.
 pub type Router = fn(&Request, &Routes) -> (Vec<String>, CallBack);
@@ -335,7 +335,7 @@ impl Configuration {
 /// The default static files directory is `static/`. Static files are served at
 /// `/static/{file path under static directory}`
 fn static_route(request: Request, config: &Configuration) -> Response {
-    let file_to_get = request.args.join("/");
+    let file_to_get = request.get_url_args();
     let static_dir = config.server.get_static_directory();
     let filename = format!("{}{}", static_dir, file_to_get);
     let file_to_serve = File::open(&filename);
@@ -400,7 +400,7 @@ fn default_home(_: Request, _: &Configuration) -> Response {
 
 /// This router has some limitations. It only correctly parses wildcard characters
 /// defined at the end of a route, such as: `GET /home/{}` but nowhere else.
-/// A route map defined as 
+/// A route map defined as
 /// <br>
 /// "GET /home/{}/static/{}" => my_func
 /// "GET /home/{}" => my_other_func
@@ -491,7 +491,7 @@ fn test_route_wildcard_complex() {
 /// returns a Response based on how the route map is currently setup.
 pub fn route_request(request: Request, configs: &Configuration) -> Response {
     let (args, callback) = configs.server.route_request(&request, &configs.routes);
-    callback(request.with_args(args), configs)
+    callback(request.with_url_args(args).query_params_from_route(), configs)
 }
 
 /// Takes a TCP buffer, reads whatever is in it and outputs
@@ -527,7 +527,7 @@ fn write_output_buffer(mut stream : &TcpStream, to_write : &[u8]) {
 /// to the stream.
 fn handle_request(stream : TcpStream, configs: &Configuration) {
     let vector_buffer = read_input_buffer(&stream);
-    let request_str = 
+    let request_str =
         String::from(match str::from_utf8(&vector_buffer) {
             Ok(x) => x,
             Err(err) => {
