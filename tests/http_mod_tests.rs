@@ -5,38 +5,19 @@ use std::collections::HashMap;
 
 
 #[test]
+// Checks that the equality trait works for Request objects
 fn request_eq_test(){
-    let method = "method".to_string();
-    let route = "route".to_string();
-    let mut map = HashMap::new();
-    map.insert("test".to_string(), "header".to_string());
-
-    let original = Request::new().with_method(method.clone())
-                                 .with_route(route.clone())
-                                 .with_headers(map.clone());
-    let request = Request::new().with_method(method)
-                                .with_route(route)
-                                .with_headers(map);
-    assert_eq!(true, original == request)
+    let request1 = Request::new();
+    let request2 = Request::new();
+    assert_eq!(true, request1 == request2)
 }
 
 #[test]
+// Checks that the equality trait works for request objects
 fn response_eq_test() {
-    let status = 0_i32;
-    let content = ContentType::TextHtml;
-    let body = b"body";
-    let mut map = HashMap::new();
-    map.insert("test".to_string(), "header".to_string());
-
-    let original = Response::new().with_status(status)
-				                  .with_content_type(content.clone())
-				                  .with_body(body.clone().to_vec())
-				                  .with_headers(map.clone());
-    let response = Response::new().with_status(status)
-				                  .with_content_type(content)
-				                  .with_body(body.to_vec())
-				                  .with_headers(map);
-    assert_eq!(true, original == response)
+    let response1 = Response::new();
+    let response2 = Response::new();
+    assert_eq!(true, response1 == response2)
 }
 
 #[test]
